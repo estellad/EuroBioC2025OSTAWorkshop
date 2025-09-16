@@ -49,9 +49,6 @@
   </a>
   <ul class="dropdown-menu" role="menu">
 <li>
-      <a href="../articles/HOWTO_BUILD_WORKSHOP.html">How To Build A Workshop Package</a>
-    </li>
-    <li>
       <a href="../articles/seq-workflow-visium-hd-cell.html">EuroBioC2025 OSTA Workshop</a>
     </li>
   </ul>
@@ -93,8 +90,8 @@
 <div class="section level2">
 <h2 id="workflow-visium-hd-cell-level">Workflow: Visium HD cell-level<a class="anchor" aria-label="anchor" href="#workflow-visium-hd-cell-level"></a>
 </h2>
-<p>Authors: Yixing E. Dong<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, Ellis Patrick<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>. <br> Last modified:
-15 September, 2025.</p>
+<p>Authors: Yixing E. Dong<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, Ellis Patrick<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+<p>Last modified: 15 September, 2025.</p>
 <div class="section level3">
 <h3 id="instructor-name-and-contact-information">Instructor name and contact information<a class="anchor" aria-label="anchor" href="#instructor-name-and-contact-information"></a>
 </h3>
@@ -116,7 +113,7 @@ statistics, which will be demonstrated in a second half of the workshop.
 The complete analysis offered by existing tools highlights the ease with
 which researchers can turn the raw counts from a Visium HD experiment
 into biological insights using Bioconductor and CRAN. The complete
-workflow is available at <todo> .</todo></p>
+workflow is available at <a href="https://lmweber.org/OSTA/" class="external-link uri">https://lmweber.org/OSTA/</a></p>
 <div class="section level4">
 <h4 id="pre-requisites">Pre-requisites<a class="anchor" aria-label="anchor" href="#pre-requisites"></a>
 </h4>
@@ -142,9 +139,6 @@ Visium HD analysis</a> in the OSTA book</li>
 demonstration by bringing their laptops along. To follow the analysis on
 their own laptops, participants need to install the
 <code>EuroBioC2025_OSTA_Workshop</code> workflow by running</p>
-<!-- # ```{r} -->
-<!-- # # TODO -->
-<!-- # ``` -->
 <p>The relevant data are stored on Open Science Framework, and can be
 downloaded as delayed format cached on your laptop through
 <code>OSTA.data</code>:</p>
@@ -166,7 +160,8 @@ downloaded as delayed format cached on your laptop through
 </h4>
 <p>Bioconductor: Banksy, DropletUtils, ggspavis, OSTA.data, scater,
 scran, scuttle, spacexr, SpatialExperiment, SpotSweeper CRAN: dplyr,
-igraph, ggplot2, magick, patchwork, pheatmap, sf, tidyr, tidyverse</p>
+igraph, ggplot2, magick, patchwork, pheatmap, sf, tidyr, tidyverse,
+spicyR, Statial</p>
 </div>
 <div class="section level4">
 <h4 id="time-outline">Time outline<a class="anchor" aria-label="anchor" href="#time-outline"></a>
@@ -194,14 +189,18 @@ igraph, ggplot2, magick, patchwork, pheatmap, sf, tidyr, tidyverse</p>
 <td>5 mins</td>
 </tr>
 <tr class="odd">
-<td>Domain identification</td>
+<td>Cell annotation</td>
 <td>10 mins</td>
 </tr>
 <tr class="even">
-<td>Deconvolution</td>
-<td>15 mins</td>
+<td>Domain identification</td>
+<td>10 mins</td>
 </tr>
 <tr class="odd">
+<td>Spatial analysis</td>
+<td>30 mins</td>
+</tr>
+<tr class="even">
 <td>Conclusion</td>
 <td>5 mins</td>
 </tr>
@@ -213,10 +212,10 @@ igraph, ggplot2, magick, patchwork, pheatmap, sf, tidyr, tidyverse</p>
 <h3 id="workshop-goals-and-objectives">Workshop goals and objectives<a class="anchor" aria-label="anchor" href="#workshop-goals-and-objectives"></a>
 </h3>
 <p>The key steps to Visium HD data analysis are described in this
-workshop with diverse visualization of methods used. The goal is to
-allow beginner bioinformatician working on Visium HD data to become
-familiar with each of the steps involved, as well as completing a
-standard analysis pipeline from start to finish.</p>
+workshop with diverse visualization of methods used. The goal is to help
+a beginner bioinformatician working on Visium HD data to become familiar
+with each of the steps involved, as well as completing a standard
+analysis pipeline from start to finish.</p>
 <div class="section level4">
 <h4 id="learning-goals">Learning goals<a class="anchor" aria-label="anchor" href="#learning-goals"></a>
 </h4>
@@ -246,6 +245,7 @@ data via deconvolution</li>
 <li>visualization of Visium HD data as polygons, of the cell centroids,
 and in reduced dimensions</li>
 <li>checking concordance between cell typing results with heatmaps</li>
+<li>perform spatial analysis of a single image</li>
 </ul>
 </div>
 </div>
@@ -310,7 +310,7 @@ factor <code>.json</code> file, and image file. We will use high
 resolution image, as it gives expected H&amp;E details under segmented
 cell masks.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="st">"utils.R"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"vignettes/utils.R"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co"># ggplot theme alias</span></span>
 <span><span class="va">center_title</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>plot.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>hjust <span class="op">=</span> <span class="fl">0.5</span><span class="op">)</span><span class="op">)</span></span>
@@ -337,7 +337,7 @@ cell masks.</p>
 <code class="sourceCode R"><span><span class="co"># Read in Visium HD cell segmented data as SpatialFeatureExperiment object</span></span>
 <span><span class="va">vhdsfe</span> <span class="op">&lt;-</span> <span class="fu">readVisiumHDCellSeg</span><span class="op">(</span><span class="va">td</span>, res <span class="op">=</span> <span class="st">"hires"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading layer `cell_segmentations' from data source </span></span>
-<span><span class="co">#&gt;   `/tmp/Rtmp3u5qkC/file3ec2a33345f/segmented_outputs/cell_segmentations.geojson' </span></span>
+<span><span class="co">#&gt;   `/tmp/RtmpGIvFrg/file80c25de2b7f/segmented_outputs/cell_segmentations.geojson' </span></span>
 <span><span class="co">#&gt;   using driver `GeoJSON'</span></span>
 <span><span class="co">#&gt; Simple feature collection with 220704 features and 1 field</span></span>
 <span><span class="co">#&gt; Geometry type: POLYGON</span></span>
@@ -349,16 +349,16 @@ cell masks.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># </span><span style="color: #555555;">Features = 18132 | Cells = 220703 | Assays = counts</span></span></span>
 <span><span class="co">#&gt;    .cell Sample              Barcode sample_id pxl_col_in_hires pxl_row_in_hires</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/Rtmp3u5qkC/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 220,693 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: pxl_col_in_fullres &lt;dbl&gt;, pxl_row_in_fullres &lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
@@ -755,7 +755,7 @@ heatmap:</p>
 <span>    mat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">pbs</span><span class="op">)</span><span class="op">)</span>, scale <span class="op">=</span> <span class="st">"column"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">101</span><span class="op">)</span>,</span>
 <span>    <span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">common_args_heatmap</span><span class="op">)</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-mgs-hm-1.png" width="432"></p>
-<p>We can visualize some maker genes:</p>
+<p>We can visualize some marker genes:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"MMP2"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"MMP2"</span><span class="op">)</span> </span>
@@ -897,7 +897,7 @@ context.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/plotly/man/ggplotly.html" class="external-link">ggplotly</a></span><span class="op">(</span><span class="va">plotKontext</span><span class="op">)</span></span></code></pre></div>
 <div class="plotly html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:768px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"3ec22be1c110":{"x":{},"y":{},"label":{},"type":"scatter"},"3ec218185f50":{"yintercept":{}},"3ec267d4429e":{"xintercept":{}}},"cur_data":"3ec22be1c110","visdat":{"3ec22be1c110":["function (y) ","x"],"3ec218185f50":["function (y) ","x"],"3ec267d4429e":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"80c30d9eb7a":{"x":{},"y":{},"label":{},"type":"scatter"},"80c41ea9275":{"yintercept":{}},"80c73322cc7":{"xintercept":{}}},"cur_data":"80c30d9eb7a","visdat":{"80c30d9eb7a":["function (y) ","x"],"80c41ea9275":["function (y) ","x"],"80c73322cc7":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
 around Tumour) to confirm at which scales the effect appears, which is
 often informative for processes like invasion fronts or peritumoural
 niches.</p>
@@ -942,22 +942,23 @@ functional interaction. To uncover biological relevance, we need to test
 whether changes in the microenvironment are associated with measurable
 shifts in gene expression within a given cell type.</p>
 <p>This is the motivation behind <code>spatioMark</code>, part of the
-Statial package. The idea is simple but powerful:</p>
+Statial package. The idea is simple:</p>
 <ul>
 <li><p>take a target population (for example, Myeloid cells),</p></li>
 <li><p>quantify its local environment (how many Tumour cells, T cells,
 fibroblasts, etc. are nearby within a certain radius),</p></li>
-<li><p>and ask whether the transcriptomes of the target cells vary
-systematically with that environment.</p></li>
+<li><p>and ask whether the transcriptomes of the target cells vary with
+that environment.</p></li>
 </ul>
 <p>In practice, spatioMark first computes local abundances of each cell
 type around every cell, giving each cell a numerical “neighbourhood
 profile.” These covariates then feed into a gene-wise regression model.
 For each gene expressed in the target population, spatioMark fits a
-generalised linear model with a negative binomial mean–variance
-relationship to account for count data. The coefficients tell us whether
-gene expression increases or decreases as the abundance of a chosen
-neighbour rises.</p>
+generalised linear model. As we have count data in this case, we
+leverage functionality in the <code>edgeR</code> package to model the
+data as negative binomial. The coefficients tell us whether gene
+expression increases or decreases as the abundance of a chosen neighbour
+rises.</p>
 <p>First, we need to quantify the abundance of each cell type around
 each cell.</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
@@ -1021,9 +1022,11 @@ patterns when they are located close to Tumour cells.</p>
 <span><span class="co">#&gt; 18 6.223286e-07 2.936354e-04</span></span>
 <span><span class="co">#&gt; 19 7.720243e-07 3.450949e-04</span></span>
 <span><span class="co">#&gt; 20 8.670557e-07 3.681952e-04</span></span></code></pre></div>
-<p>The output is a ranked list of genes, highlighting markers that
-change as Myeloid cells are near tumour cells. SPP1 is known to be
-expressed in tumour-associated macrophages.</p>
+<p>The previous output is a ranked list of genes, highlighting markers
+that change as Myeloid cells are near tumour cells. One of the top genes
+on this list is SPP1 which is known to be expressed in tumour-associated
+macrophages. We can visualise this relationship using the
+<code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges()</a></code> function.</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
@@ -1055,9 +1058,10 @@ as CEACAM6 which are likely lateral spillover or diffusion.</p>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-ceacam6-check-1.png" width="576"></p>
 <p>Because we already computed RCTD weights, we can mitigate
 contamination by adding deconvolution-derived components as covariates
-to our models. By projecting the RCTD cell-type weight matrix into
+to our models. By storing the RCTD cell-type weight matrix into
 <code>reducedDim(vhdsub, "RCTD")</code>, we can pass “RCTD” to the
-contamination argument of <code><a href="https://sydneybiox.github.io/Statial/reference/calcStateChanges.html" class="external-link">calcStateChanges()</a></code>. This can
+contamination argument of <code><a href="https://sydneybiox.github.io/Statial/reference/calcStateChanges.html" class="external-link">calcStateChanges()</a></code>. SpatioMark
+will use these estimates of contamination in its modelling to hopefully
 remove false positives like CEACAM6 while preserving genuine
 relationships.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
