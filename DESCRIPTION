@@ -11,10 +11,7 @@ Authors@R:
             family = "Patrick", 
             role = c("aut"), 
             email = "ellis.patrick@sydney.edu.au"))
-Description: This package serves as a template for using github actions to 
-    prepare a Bioconductor Workshop package for use. In particular,
-    a pkgdown website and docker image are generated based on workflow 
-    settings. 
+Description: EuroBioC2025 OSTA workshop on Visium HD cell-level analysis workflow which includes data processing, cell annotation and spatial analysis.
 License: MIT + file LICENSE
 Encoding: UTF-8
 Roxygen: list(markdown = TRUE)

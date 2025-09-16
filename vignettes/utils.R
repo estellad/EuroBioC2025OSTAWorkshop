@@ -9,7 +9,6 @@
 #' @param scalef scaling factor from `/spatial/scalefactors_json.json` file
 #'
 #' @returns a sf object with Y-axis of the points or polygons flipped.
-#' @export
 #'
 #' @examples
 #' geo_data_flipped <- flip_sf_Y(sf = geo_data, type = "POLYGON", 
@@ -38,7 +37,6 @@ flip_sf_Y <- function(sf, type = "POINT", img_height, scalef){
 #' @param res "hires" or "lowres" for what .png to read in. 
 #'
 #' @returns a `SpatialFeatureExperiment` object.
-#' @export
 #'
 #' @examples
 #' vhdsfe <- readVisiumHDCellSeg(td = "~/Desktop", res = "hires")
@@ -156,7 +154,6 @@ readVisiumHDCellSeg <- function(td, res){
 #' @param ymax higher y coordinate of the subset region. 
 #'
 #' @returns a subsetted `SpatialFeatureExperiment` object.
-#' @export
 #'
 #' @examples
 #' vhdsfe_subset <- subsetVisiumHD(vhdsfe, xmin = 4214.113, xmax = 4222.916, 

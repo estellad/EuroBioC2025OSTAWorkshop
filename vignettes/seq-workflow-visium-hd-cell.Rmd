@@ -18,19 +18,21 @@ knitr::opts_chunk$set(
 
 # Workflow: Visium HD cell-level
 
-Authors: Yixing E. Dong[^1], Ellis Patrick[^2]. <br/> Last modified: 15 September, 2025.
+Authors: Yixing E. Dong[^1], Ellis Patrick[^2].  
+
+Last modified: 15 September, 2025.
 
 [^1]: University of Lausanne, Lausanne, Switzerland
 
 [^2]: University of Sydney, Sydney, Australia
 
 ## Instructor name and contact information
--   Yixing Estella Dong (estella.yixing.dong@gmail.com)
--   Ellis Patrick (ellis.patrick@sydney.edu.au)
+
+-   Yixing Estella Dong ([estella.yixing.dong\@gmail.com](mailto:estella.yixing.dong@gmail.com){.email})
+-   Ellis Patrick ([ellis.patrick\@sydney.edu.au](mailto:ellis.patrick@sydney.edu.au){.email})
 
 ## Workshop Description
-
-Spatial transcriptomics (ST) data with cell types annotated can reveal key disease characteristics with neighbourhood enrichment and spatial statistics. In this instructor-led live demo, we analyse Visium HD data segmented to cells, demonstrating use of `SpatialFeatureExperiment` class in R to import, visualize, quality control, label transfer to annotate the data from a single-cell reference, spatial domain identification, marker gene selection, and spatial localisation of cells in tumor microenvironment. The complete analysis offered by existing tools highlights the ease with which researchers can turn the raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. The complete workflow is available at <TODO> .
+In this instructor-led live demo, we analyze Visium HD data segmented into cells, demonstrating the use of the `SpatialFeatureExperiment` class in R to import, visualize, perform quality control, transfer labels from a single-cell reference to annotate the data, identify spatial domains, and select marker genes. Spatial transcriptomics (ST) data with annotated cell types can reveal key disease characteristics through neighborhood enrichment and spatial statistics, which will be demonstrated in the second half of the workshop. The complete analysis provided by existing tools highlights how easily researchers can transform raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. Additional ST workflows are available at <https://lmweber.org/OSTA/>.
 
 ### Pre-requisites
 
@@ -44,15 +46,8 @@ Additional reading:
 -   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
 
 
-### Participation
-
-Participants can watch the live demo, or may prefer to follow the demonstration by bringing their laptops along. To follow the analysis on their own laptops, participants need to install the `EuroBioC2025OSTAWorkshop` workflow by running:
-
-```{r}
-BiocManager::install("EuroBioC2025OSTAWorkshop")
-```
-
-The relevant data are stored on Open Science Framework, and can be downloaded and cached on your laptop through `r BiocStyle::Biocpkg("OSTA.data")`:
+### Dataset
+The relevant data by Oliveira et al. (2024) are stored on Open Science Framework, and can be downloaded as delayed format cached on your laptop through `r BiocStyle::Biocpkg("OSTA.data")`:
 
 ```{r load-data-test, message=FALSE}
 library(OSTA.data)
@@ -63,7 +58,7 @@ unzip(pa, exdir=td)
 list.files(file.path(td, "segmented_outputs"))
 ```
 
-We also prepared a reader for Visium HD segmented output at `./vignettes/utils.R`.
+We prepared a reader for Visium HD segmented output at `./vignettes/utils.R`.
 
 ### *R* / *Bioconductor* packages used
 
@@ -74,40 +69,41 @@ CRAN:         dplyr, ggplot2, grDevices, grid, here, igraph, magick, pals, patch
 
 ### Time outline
 
-|            Activity          |   Time  |
-|------------------------------|---------|
-| Introduction                 |  5 mins |
-| Initialization               |  3 mins |
-| Data loading                 |  7 mins |
-| Data processing              |  5 mins |
-| Domain identification        | 10 mins |
-| Deconvolution                | 15 mins |
-| Conclusion                   |  5 mins |
+| Activity              | Time    |
+|-----------------------|---------|
+| Introduction          | 5 mins  |
+| Initialization        | 3 mins  |
+| Data loading          | 7 mins  |
+| Data processing       | 5 mins  |
+| Quality control       | 10 mins |
+| Cell annotation       | 10 mins |
+| Domain identification | 10 mins |
+| Spatial analysis      | 30 mins |
+| Conclusion            | 5 mins  |
 
 ## Workshop goals and objectives
 
-The key steps to Visium HD data analysis are described in this workshop with diverse visualization of methods used. The goal is to allow beginner bioinformatician working on Visium HD data to become familiar with each of the steps involved, as well as completing a standard analysis pipeline from start to finish.
+The key steps of Visium HD data analysis are described in this workshop, along with diverse visualizations of the methods used. The goal is to help beginner bioinformaticians working with Visium HD data become familiar with each step involved and complete a standard analysis pipeline from start to finish.
 
 ### Learning goals
 
--   learn how to analyse Visium HD data with cell segmentation output
--   understanding of key steps and methods for deriving biological insights 
--   aesthetic visualization of Visium HD data with existing R packages
-
+-   Learn how to analyze Visium HD data with cell segmentation output
+-   Understand the key steps and methods for deriving biological insights
+-   Create aesthetic visualizations of Visium HD data using existing R packages
 
 ### Learning objectives
 
--   read in cell segmentation `.geojson` data and format as a `sf` object
--   manipulate cell polygon coordinates with scaling factor and alignment with H&E image
--   read in count data and format as a `SpatialExperiment` object
--   perform spatially-aware quality control, clustering, marker gene identification
--   perform label transfering from single-cell reference data to spatial data via deconvolution
--   visualization of Visium HD data as polygons, of the cell centroids, and in reduced dimensions
--   checking concordance between cell typing results with heatmaps
+-   Read Visium HD segmentation output data as a `SpatialFeatureExperiment` object
+-   Understand spatially aware quality control metrics
+-   Perform label transfer from single-cell reference data to spatial data
+-   Identify spatial domains and marker genes for each region
+-   Visualize Visium HD data as polygons or cell centroids
+-   Check concordance between cell typing results and spatial domains using heatmaps
+-   Perform spatial analysis of a single image
 
 ## Introduction
 
-As of June 2025, Visium HD enabled direct output of H&E segmented cell-level data from SpaceRanger v4. This automation skips the need of an additional segmentation tool, such as `bin2cell`. Since biologists often find having cellular units more intuitive when deriving insights, this output can attract more interests than bin-level data. However, please note that out of cell boundary bins can still benefit many research topics in the tumor microenvironment. In this workflow, we will demonstrate some analysis steps at the cell-level using the same dataset, subsetted to the same region, as in [@sec-seq-workflow-visium-hd; @Oliveira2024].
+As of June 2025, Visium HD enables direct output of H&E-segmented cell-level data from [SpaceRanger v4](https://www.10xgenomics.com/analysis-guides/segmentation-visium-hd). This automation removes the need for an additional segmentation tool, such as `bin2cell`. Since biologists often find cellular units more intuitive for deriving insights, this output may attract more interest than bin-level data. However, bins outside cell boundaries can still provide valuable information for many research topics in the tumor microenvironment. In this workflow, we will demonstrate several analysis steps at the cell level using the same dataset, subsetted to the same region, as in the Sequencing-based platforms - Workflow: Visium HD chapter of OSTA book.
 
 ## Dependencies {#sec-seq-workflow-visium-hd-cell-load-data}
 
@@ -147,10 +143,10 @@ library(Voyager)
 
 ## Load spatial data
 
-Output files from SpaceRanger v4 are listed in `/segmented_outputs` folder, with the expected structure detailed in @sec-bkg-importing. We start with read in cell segmentation as a `sf` object, scaling factor `.json` file, and image file. We will use high resolution image, as it gives expected H&E details under segmented cell masks.
+We source the reader in `utils.R` and specify alias for plotting themes. 
 
 ```{r prep}
-source("utils.R")
+source(here::here("vignettes/utils.R"))
 
 # ggplot theme alias
 center_title <- theme(plot.title = element_text(hjust = 0.5))
@@ -170,6 +166,8 @@ common_args_heatmap <- list(cellwidth=10, cellheight=10,
                             treeheight_row=5, treeheight_col=5)
 ```
 
+Output files from SpaceRanger v4 are listed in `/segmented_outputs` folder, with the expected structure detailed in the Background - Importing data chapter of the OSTA book. 
+
 ```{r osta_download}
 id <- "VisiumHD_HumanColon_Oliveira"
 pa <- OSTA.data_load(id)
@@ -177,16 +175,16 @@ dir.create(td <- tempfile())
 unzip(pa, exdir=td)
 ```
 
+<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting.  -->
+
+Read in Visium HD cell segmented data as a `SpatialFeatureExperiment` object.
 
 ```{r load-other-vhdcell, message=FALSE, warning=FALSE}
-# Read in Visium HD cell segmented data as SpatialFeatureExperiment object
 vhdsfe <- readVisiumHDCellSeg(td, res = "hires")
 vhdsfe
 ```
 
-First, we need to scale the coordinates to match the high resolution image. In addition, the y-axis coordinates should be flipped, as R uses a different origin than the image coordinate system. While `ggspavis` manages this internally for Visium, we will proceed with a manual plotting approach for Visium HD polygons (rather than cell centroid x and y) to maintain clarity.
-
-To keep runtimes low, our downstream analysis will be performed on a subset area of 16 µm bins (1/64 of the data coverage area).
+To keep runtime low, our downstream analysis will be performed on a subset area of 16 µm bins (1/64 of the data coverage area). We restrict to the same region from as we have done in the OSTA book. 
 
 ```{r subset-polygons, message=FALSE, warning=FALSE}
 vhdsub <- subsetVisiumHD(vhdsfe,
@@ -241,7 +239,7 @@ p1 <- plotSpatialFeature(vhdsub, bbox = unlist(getBoxRange(vhdsub)),
 
 ## Which cells passed quality check?
 
-Get cell-level QC metrics for visualization.
+Get cell-level QC metrics for visualization with `r BiocStyle::Biocpkg("scuttle")`.
 
 ```{r qc-metrics-vhdsub, message=FALSE, warning=FALSE}
 # Visualize library size to the polygons
@@ -252,6 +250,8 @@ vhdsub$log_sum <- log1p(vhdsub$sum)
 CD <- colData(vhdsub) %>% as.data.frame()
 head(CD %>% select(Barcode, sum, log_sum, subsets_mt_percent))
 ```
+
+Here is an overview of the cells colored by their log library size and mitochondrial percentage.
 
 ```{r loglib-mitopct, fig.width=8, fig.height=4, message=FALSE}
 p0 <- plotSpatialFeature(vhdsub, features = "log_sum", 
@@ -267,10 +267,9 @@ p1 <- plotSpatialFeature(vhdsub, features = "subsets_mt_percent",
   scale_fill_gradientn(colors = pals::jet())
 ```
 
-
 ### SpotSweeper
 
-SpotSweeper determine outliers based on low log-library size, few uniquely detected features, or high mitochondrial count fraction:
+`r BiocStyle::Biocpkg("SpotSweeper")` determines outliers based on low log-library size, few uniquely detected features, or a high mitochondrial fraction compared to their surrounding neighborhood:
 
 ```{r qc-vhdsub-local}
 vhdsub <- localOutliers(vhdsub, metric="sum", direction="lower", log=TRUE)
@@ -284,7 +283,7 @@ vhdsub$discard <-
 table(vhdsub$discard)
 ```
 
-We can visualize the local outliers identified by `SpotSweeper` in space. It is difficult to see as we only have few small cells identified as outliers per flag.
+We can visualize the local outliers identified by `SpotSweeper` spatially. However, they are difficult to see, as only a few small cells are flagged as outliers.
 
 ```{r qc-vhdsub-plt, fig.width=8, fig.height=3, message=FALSE}
 common_args_qc <- list(fill = NA, color = "grey90", linewidth = 0.1, 
@@ -343,7 +342,6 @@ rownames(sce) <- make.unique(rowData(sce)$Symbol)
 sce <- sce[, sce$QCFilter == "Keep"]
 ```
 
-
 We are wanting to use this single cell data as a reference. It has two resolutions of cell annotations. Lets check out what cells labels are in `Level1`.
 
 ```{r ann-level1-table}
@@ -357,9 +355,7 @@ Spaces can make manipulating data tricky sometimes so lets replace them with und
 sce$Level1 <- gsub(" ", "_", sce$Level1)
 ```
 
-
 For speed we down-sample to at most 1,000 cells per reference class. This preserves diversity within each class while keeping memory and runtime manageable.
-
 
 ```{r ann-downsample-sce, message=FALSE, warning=FALSE}
 # (this is done only to keep runtime/memory low)
@@ -367,10 +363,9 @@ cells_by_type <- split(seq_len(ncol(sce)), sce$Level1)
 down_sample <- unlist(lapply(cells_by_type, \(.) sample(., min(length(.), 1000))))
 ```
 
-
 ### RCTD - Robust decomposition of cell type mixtures in spatial transcriptomics
 
-There are many ways to transfer labels from single-cell data to spatial data. We use RCTD because it performs competitively in public benchmarks, models mixed signals explicitly, and assigns each spatial unit a clear class as a singlet or as one of several doublet types. RCTD was originally designed for spot-based platforms such as 10x Visium, where each spot captures RNA from multiple cells. It treats the observed counts in a spot as a mixture of reference cell-type expression profiles and uses a likelihood model to estimate non-negative weights for each candidate cell type. It then compares a singlet model against a doublet model to determine whether one cell type is sufficient to explain the counts or whether two are required. The method also learns scale factors to account for platform differences and total RNA content, which helps it transfer labels across technologies.
+There are many ways to transfer labels from single-cell data to spatial data. We use `r BiocStyle::Biocpkg("RCTD")` because it performs competitively in public benchmarks, models mixed signals explicitly, and assigns each spatial unit a clear class as a singlet or as one of several doublet types. RCTD was originally designed for spot-based platforms such as 10x Visium, where each spot captures RNA from multiple cells. It treats the observed counts in a spot as a mixture of reference cell-type expression profiles and uses a likelihood model to estimate non-negative weights for each candidate cell type. It then compares a singlet model against a doublet model to determine whether one cell type is sufficient to explain the counts or whether two are required. The method also learns scale factors to account for platform differences and total RNA content, which helps it transfer labels across technologies.
 
 In our setting we apply RCTD at cellular resolution using segmented Visium HD data. Although each unit is intended to represent a single cell, there are still cases where the measured counts reflect more than one cell type. This can arise from partial volume effects at cell boundaries, segmentation errors, tightly packed regions, or local diffusion of transcripts. Running RCTD in doublet mode remains useful here because it can flag these cases and provide a principled estimate of the most likely composition. In practice we expect most units to be classified as singlets, with a minority of doublets that warrant closer inspection or additional filtering.
 
@@ -380,7 +375,6 @@ Unfortunately running RCTD is slow, so we will load a precompiled version.
 # data("rctd_result_level1.RData", package = "EuroBioC2025_OSTA_Workshop")
 load(here::here("data/rctd_result_level1.RData"))
 ```
-
 
 !!! Do not run this in the workshop it will take 30 mins.
 
@@ -396,42 +390,41 @@ load(here::here("data/rctd_result_level1.RData"))
 # # save(rctd_result_level1, file = here::here("data/rctd_result_level1.RData"))
 ```
 
-Note: RCTD does have some internal QC, so lets check nothing was filtered out prior to running deconvolution. 
+Note: RCTD does have some internal QC, so lets check if anything was filtered out prior to running deconvolution.
 
 ```{r rctd-qc-dims}
 dim(vhdsub)
 dim(rctd_result_level1)
 setdiff(colnames(vhdsub), colnames(rctd_result_level1))
 vhdsub$discard[colnames(vhdsub) == "91874"]
-# [1] TRUE
 vhdsub$sum_outliers[colnames(vhdsub) == "91874"]
-# [1] TRUE
 vhdsub$sum[colnames(vhdsub) == "91874"]
 head(sort(vhdsub$sum))
 ```
 
-The spot labels are saved in the colData as `spot_class`. This provides a quick quality check: a majority of singlet classifications at cell resolution is expected and supports the validity of the H&E-guided segmentation. 
-
+The spot labels are saved in the `colData()` as `spot_class`. This provides a quick quality check: a majority of singlet classifications at cell resolution is expected and supports the validity of the H&E-guided segmentation.
 
 ```{r rctd-spot-class-tab, warning=FALSE, message=FALSE}
 table(rctd_result_level1$spot_class)
 ```
 
-
-We then synchronise the deconvolution labels back into our `vhdsub` SpatialExperiment object by matching cell_ids to keep everything aligned.
-
+We then synchronise the deconvolution labels back into our `vhdsub` `SpatialFeatureExperiment` object by matching cell ids to keep everything aligned.
 
 ```{r rctd-assign-celltype}
 # Subset to RCTD filtered object for convenience
 vhdsub <- vhdsub[, colnames(vhdsub)]
 
 # Here we use match to ensure that we match the cell IDs
-vhdsub$cellTypeClass <- rctd_result_level1$spot_class[match(colnames(vhdsub), colnames(rctd_result_level1))]
-vhdsub$cellType <- rctd_result_level1$first_type[match(colnames(vhdsub), colnames(rctd_result_level1))]
+vhdsub$cellTypeClass <- rctd_result_level1$spot_class[
+  match(colnames(vhdsub),colnames(rctd_result_level1))]
+vhdsub$cellType <- rctd_result_level1$first_type[
+  match(colnames(vhdsub), colnames(rctd_result_level1))]
 
 # Double check that the numbers of the cell types is consistent
 table(vhdsub$cellType)
 ```
+
+We can visualize the spatial location of singlets, doublets, or the assigned cell types by `RCTD`.
 ```{r rctd-result-discrete, fig.width=8, fig.height=3, message=FALSE}
 p0 <- plotSpatialFeature(vhdsub, features = "cellTypeClass", 
                    colGeometryName = "updatecellSeg") + 
@@ -443,28 +436,23 @@ p1 <- plotSpatialFeature(vhdsub, features = "cellType",
 (p0 | p1) & thin_discrete_legend
 ```
 
+Previously, we found one cell was flagged as a local outlier by `SpotSweeper`, and now we can check its property. 
 ```{r rctd-agree-spotsweeper}
 table(vhdsub$subsets_mt_percent_outliers == TRUE)
-# FALSE  TRUE 
-#  4241     1 
 vhdsub$cellType[vhdsub$subsets_mt_percent_outliers == TRUE]
-# [1] NA
 vhdsub$cellTypeClass[vhdsub$subsets_mt_percent_outliers == TRUE]
-# reject
 ```
 
-
-Filter out low quality cells from the `sf` and `SpatialExperiment` object.
+Filter out low quality cells from the `SpatialFeatureExperiment` object, prior to spatial clustering. 
 
 ```{r qc-filtering, message=FALSE, warning=FALSE}
 vhdsub <- vhdsub[, !vhdsub$discard]
 dim(vhdsub)
 ```
 
+## Spatial domain identification
 
-## Spatial domain Identification
-
-First, we identify highly variable genes (HVGs) in the target area: [Note that spatially variable genes (SVGs) could be used instead]{.aside}
+First, we identify highly variable genes (HVGs) in the target area. Note that spatially variable genes (SVGs) could be used instead.
 
 ```{r vhdsub-hvg}
 vhdsub <- logNormCounts(vhdsub)
@@ -507,7 +495,7 @@ plotSpatialFeature(vhdsub, features = "Banksy",
   thin_discrete_legend
 ```
 
-Next, we can perform differential gene expresison (DGE) analysis to identify markers for each cluster; c.f. @sec-crs-signatures. We also compute the cluster-wise mean expression of selected markers:
+Next, we can perform differential gene expresison (DGE) analysis to identify markers for each cluster. We also compute the cluster-wise mean expression of selected markers:
 
 ```{r mgs}
 # differential gene expression analysis
@@ -530,7 +518,7 @@ exec(pheatmap,
     !!!common_args_heatmap)
 ```
 
-We can visualize some maker genes:
+We can visualize some marker genes:
 
 ```{r plt-mgs-xy, fig.width=8, fig.height=2.5, message=FALSE}
 p0 <- plotSpatialFeature(vhdsub, features = "MMP2", 
@@ -547,7 +535,6 @@ p2 <- plotSpatialFeature(vhdsub, features = "DES",
   scale_fill_gradientn(colors = rev(hcl.colors(9, "Rocket")))
 
 ```
-
 
 ## Concordance of deconvolution & clustering
 
@@ -570,7 +557,7 @@ p0 + p1 +
 
 ```
 
-We observe that Banksy delineates tissue borders very well, while deconvolution provides direct biological insight into the underlying clusters. Their concordance can be visualized using a heatmap:
+We observe that `Banksy` delineates tissue borders very well, while `RCTD` provides direct biological insight into the underlying clusters. Their concordance can be visualized using a heatmap:
 
 ```{r plt-dec-clu-hm, fig.width=2.5, fig.height=3}
 #| code-fold: true
@@ -578,13 +565,11 @@ fq <- prop.table(table(vhdsub$Banksy, vhdsub$cellType), 1)
 exec(pheatmap, fq, !!!common_args_heatmap)
 ```
 
-
 ## Interrogating the spatial arrangement of our cells.
 
 ### Localisation
 
-We next quantify spatial proximity between annotated cell types. The `getPairwise()` function from the `spicyR` package computes the K-cross function across all pairs of classes, summarising whether cell type A tends to appear within distance r of cell type B more often than expected under spatial randomness. Here we use a radius of 200 units (~50 microns) to capture immediate neighbourhood effects at approximately one to two cell diameters.
-
+We next quantify spatial proximity between annotated cell types. The `getPairwise()` function from the `r BiocStyle::Biocpkg("spicyR")` package computes the K-cross function across all pairs of classes, summarising whether cell type A tends to appear within distance `r` of cell type B more often than expected under spatial randomness. Here we use a radius of 200 units (\~50 microns) to capture immediate neighbourhood effects at approximately one to two cell diameters.
 
 ```{r spicy-pairwise-kcross}
 crossK = getPairwise(vhdsub, 
@@ -595,9 +580,7 @@ crossK = getPairwise(vhdsub,
                                        "pxl_row_in_fullres"))
 ```
 
-
 We can visualise these relationships using `imageCrossPlot()`. It visualises enrichment and avoidance across all pairs, which is handy for scanning for strong interactions before diving deeper. To aid interpretation, follow the sign: values above zero indicate spatial attraction at radius r (more co-occurrence than expected), while values below zero indicate spatial repulsion.
-
 
 ```{r spicy-pairwise-plot, fig.height=4, fig.width=6}
 imageCrossPlot(crossK, limits = c(-400,400))
@@ -612,19 +595,15 @@ vhdsub |>
   enlarge_legend_dot
 ```
 
-
-
 ### Localisation in context
 
-While pairwise proximity statistics are a sensible first step, they can sometimes be misleading because they ignore the broader tissue context. For example, the K-cross function from spicyR will tell us whether two cell types are found close together more often than expected under a random distribution, but it does not ask conditional questions. Biologists, however, often want to know things like:
+While pairwise proximity statistics are a sensible first step, they can sometimes be misleading because they ignore the broader tissue context. For example, the K-cross function from `spicyR` will tell us whether two cell types are found close together more often than expected under a random distribution, but it does not ask conditional questions. Biologists, however, often want to know things like:
 
 *“Do immune cells cluster more tightly with tumour than we would expect, even after accounting for the fact that immune cells already tend to occur together?”*
 
-This is where `Kontextual` from the `Statial` package comes in. Kontextual extends beyond pairwise enrichment by creating a contextual null model. Instead of comparing two cell types against a fully random distribution, it compares them against what we would expect given the observed mixture of other neighbouring cell types. In practice, this means that Kontextual is testing whether a particular association is stronger (or weaker) than would be expected given the local cellular environment.
+This is where `Kontextual` from the `r BiocStyle::Biocpkg("Statial")` package comes in. `Kontextual` extends beyond pairwise enrichment by creating a contextual null model. Instead of comparing two cell types against a fully random distribution, it compares them against what we would expect given the observed mixture of other neighbouring cell types. In practice, this means that Kontextual is testing whether a particular association is stronger (or weaker) than would be expected given the local cellular environment.
 
 For this demonstration, we define an immune context composed of T cells, Myeloid cells, and B cells. Kontextual then evaluates whether, within this immune backdrop, specific pairs (for example, Myeloid–Tumour) show evidence of additional attraction or repulsion at a chosen spatial scale. The method is flexible: you can define any grouping of interest as a “parent” or context, and then interrogate the conditional relationships of one population relative to that context.
-
-
 
 ```{r ktx-run}
 
@@ -647,8 +626,7 @@ resultsKontextual <- Kontextual(
 )
 ```
 
-
-Lets visualise the results. 
+Lets visualise the results.
 
 ```{r ktx-scatter-plot, fig.height=5, fig.width=8}
 plotKontext <- resultsKontextual |>
@@ -661,9 +639,7 @@ plotKontext <- resultsKontextual |>
 ggplotly(plotKontext)
 ```
 
-
 We can then inspect radii-dependent curves (for example Myeloid around Tumour) to confirm at which scales the effect appears, which is often informative for processes like invasion fronts or peritumoural niches.
-
 
 ```{r ktx-scale-curve, fig.height=4, fig.width=6, warning=FALSE, message=FALSE}
 curves <- kontextCurve(
@@ -695,22 +671,19 @@ ggplot(data = filter(df, cellType %in% c("Tumor", "Myeloid")),
   
 ```
 
-
-
-
 ## Identifying expression changes associated with cell localisation
 
 Spatial proximity tells us where different cell types are relative to one another, but an equally important question is what happens to those cells when they are in close contact. Proximity alone does not guarantee functional interaction. To uncover biological relevance, we need to test whether changes in the microenvironment are associated with measurable shifts in gene expression within a given cell type.
 
-This is the motivation behind `spatioMark`, part of the Statial package. The idea is simple but powerful:
+This is the motivation behind `spatioMark`, part of the `Statial` package. The idea is simple:
 
-- take a target population (for example, Myeloid cells),
+-   take a target population (for example, Myeloid cells),
 
-- quantify its local environment (how many Tumour cells, T cells, fibroblasts, etc. are nearby within a certain radius),
+-   quantify its local environment (how many Tumour cells, T cells, fibroblasts, etc. are nearby within a certain radius),
 
-- and ask whether the transcriptomes of the target cells vary systematically with that environment.
+-   and ask whether the transcriptomes of the target cells vary with that environment.
 
-In practice, spatioMark first computes local abundances of each cell type around every cell, giving each cell a numerical “neighbourhood profile.” These covariates then feed into a gene-wise regression model. For each gene expressed in the target population, spatioMark fits a generalised linear model with a negative binomial mean–variance relationship to account for count data. The coefficients tell us whether gene expression increases or decreases as the abundance of a chosen neighbour rises.
+In practice, `spatioMark` first computes local abundances of each cell type around every cell, giving each cell a numerical “neighbourhood profile.” These covariates then feed into a gene-wise regression model. For each gene expressed in the target population, spatioMark fits a generalised linear model. As we have count data in this case, we leverage functionality in the `edgeR` package to model the data as negative binomial. The coefficients tell us whether gene expression increases or decreases as the abundance of a chosen neighbour rises.
 
 First, we need to quantify the abundance of each cell type around each cell.
 
@@ -721,7 +694,6 @@ vhdsub <- getAbundances(vhdsub,
   imageID = "sample_id"
 )
 ```
-
 
 Next, we focus on whether Myeloid cells show distinct expression patterns when they are located close to Tumour cells.
 
@@ -737,7 +709,8 @@ stateChanges <- calcStateChanges(
 
 stateChanges |> head(20)
 ```
-The output is a ranked list of genes, highlighting markers that change as Myeloid cells are near tumour cells. SPP1 is known to be expressed in tumour-associated macrophages.
+
+The previous output is a ranked list of genes, highlighting markers that change as Myeloid cells are near tumour cells. One of the top genes on this list is *SPP1* which is known to be expressed in tumour-associated macrophages. We can visualise this relationship using the `plotStateChanges()` function.
 
 ```{r smark-plot-spp1, warning=FALSE, message=FALSE, fig.height=4, fig.width=7}
 p <- plotStateChanges(
@@ -757,9 +730,7 @@ p <- plotStateChanges(
 p[[1]]
 ```
 
-
-However, there are some genes that not expressed in macrophages such as CEACAM6 which are likely lateral spillover or diffusion.
-
+However, there are some genes that not expressed in macrophages such as *CEACAM6* which are likely lateral spillover or diffusion.
 
 ```{r smark-ceacam6-check, fig.height=4, fig.width=6}
 sce[, down_sample] |>
@@ -772,10 +743,7 @@ sce[, down_sample] |>
   thin_discrete_legend
 ```
 
-
-
-Because we already computed RCTD weights, we can mitigate contamination by adding deconvolution-derived components as covariates to our models. By projecting the RCTD cell-type weight matrix into `reducedDim(vhdsub, "RCTD")`, we can pass "RCTD" to the contamination argument of `calcStateChanges()`. This can remove false positives like CEACAM6 while preserving genuine relationships.
-
+Because we already computed `RCTD` weights, we can mitigate contamination by adding deconvolution-derived components as covariates to our models. By storing the `RCTD` cell-type weight matrix into `reducedDim(vhdsub, "RCTD")`, we can pass `"RCTD"` to the contamination argument of `calcStateChanges()`. SpatioMark will use these estimates of contamination in its modelling to hopefully remove false positives like *CEACAM6* while preserving genuine relationships.
 
 ```{r smark-add-contam-rctd}
 contam <- assay(rctd_result_level1,1) |>
@@ -785,7 +753,6 @@ contam <- assay(rctd_result_level1,1) |>
 
 reducedDim(vhdsub, "RCTD") <- contam[match(colnames(vhdsub), rownames(contam)),]
 ```
-
 
 ```{r smark-statechanges-contam}
 stateChangesCon <- calcStateChanges(
@@ -801,17 +768,15 @@ stateChangesCon <- calcStateChanges(
 stateChangesCon |> filter(marker == "CEACAM6")
 ```
 
-
 ## Extension
 
-You can try using a finer resolution of cell type classified by RCTD.
+You can try using a finer resolution of cell type classified by `RCTD`.
 
 ```{r level2_annotation, eval=FALSE}
 load(here::here("data/rctd_result_level2.RData"))
 ```
 
-
-Or you can try using a different deconvulation algorithm.
+Or you can try using a different deconvolution algorithm.
 
 ```{r CARD, eval=FALSE}
 set.seed(2025)
@@ -842,11 +807,3 @@ vhdsub$cellType2 <- colnames(P)[max.col(P, ties.method = "first")]
 
 reducedDim(vhdsub, "CARD") <- as.data.frame(P)
 ```
-
-
-
-
-
-
-
-
