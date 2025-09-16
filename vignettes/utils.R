@@ -1,3 +1,19 @@
+#' Flip the Y-axis of cell or nucleus segmentations to align with H&E image. 
+#'
+#' @param sf a sf object read from a `.geojson` file.
+#' @param type "POINT" for cell centroid, or "POLYGON" for cell segmentation 
+#' mask. Default is "POINT".
+#' @param img_height total length along the Y axis of the image. Obtained by 
+#' reading in `hires` or `lowre`s `.png` under `/spatial` folder with 
+#' `magick::image_read()`.
+#' @param scalef scaling factor from `/spatial/scalefactors_json.json` file
+#'
+#' @returns a sf object with Y-axis of the points or polygons flipped.
+#' @export
+#'
+#' @examples
+#' geo_data_flipped <- flip_sf_Y(sf = geo_data, type = "POLYGON", 
+#'                               img_height = 3886, scalef = 0.079)
 flip_sf_Y <- function(sf, type = "POINT", img_height, scalef){
   st_geometry(sf) <- st_sfc( 
     lapply(st_geometry(sf), function(geom) {
@@ -15,6 +31,17 @@ flip_sf_Y <- function(sf, type = "POINT", img_height, scalef){
   return(sf)
 }
 
+
+#' Reader for Visium HD cell segmented output.
+#'
+#' @param td path to unzipped Visium HD data download with `/segmented_outputs`
+#' @param res "hires" or "lowres" for what .png to read in. 
+#'
+#' @returns a `SpatialFeatureExperiment` object.
+#' @export
+#'
+#' @examples
+#' vhdsfe <- readVisiumHDCellSeg(td = "~/Desktop", res = "hires")
 readVisiumHDCellSeg <- function(td, res){
   if(res == "hires"){
     png_name = "tissue_hires_image.png"
@@ -119,6 +146,21 @@ readVisiumHDCellSeg <- function(td, res){
 
 
 
+#' Subset a `SpatialFeatureExperiment` to a region with x and y bounding box, 
+#' based on the cell centroid after scaling with scalefactor.
+#'
+#' @param vhdsfe a `SpatialFeatureExperiment` object.
+#' @param xmin lower x coordinate of the subset region. 
+#' @param xmax higher x coordinate of the subset region. 
+#' @param ymin lower y coordinate of the subset region. 
+#' @param ymax higher y coordinate of the subset region. 
+#'
+#' @returns a subsetted `SpatialFeatureExperiment` object.
+#' @export
+#'
+#' @examples
+#' vhdsfe_subset <- subsetVisiumHD(vhdsfe, xmin = 4214.113, xmax = 4222.916, 
+#'                                         ymin = 3062.505, ymax = 3135.374)
 subsetVisiumHD <- function(vhdsfe, xmin, xmax, ymin, ymax){
   # Subset to roi --------------------------------------------------------
   # From OSTA Visium HD bin-level workflow: xmin: 4214.113 ymin: 3062.505 

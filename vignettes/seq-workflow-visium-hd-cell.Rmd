@@ -30,7 +30,7 @@ Authors: Yixing E. Dong[^1], Ellis Patrick[^2]. <br/> Last modified: 15 Septembe
 
 ## Workshop Description
 
-In this instructor-led live demo, we analyse Visium HD data segmented to cells, demonstrating use of `SpatialExperiment` and `sf` classes in R to import, organise, quality control, clustering, marker gene identificaiton, and label transfer to annotate the data. Spatial transcriptomics data with cell types annotated can reveal key insights with neighbourhood enrichment and spatial statistics, which will be demonstrated in a second half of the workshop. The complete analysis offered by existing tools highlights the ease with which researchers can turn the raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. The complete workflow is available at <TODO> .
+Spatial transcriptomics (ST) data with cell types annotated can reveal key disease characteristics with neighbourhood enrichment and spatial statistics. In this instructor-led live demo, we analyse Visium HD data segmented to cells, demonstrating use of `SpatialFeatureExperiment` class in R to import, visualize, quality control, label transfer to annotate the data from a single-cell reference, spatial domain identification, marker gene selection, and spatial localisation of cells in tumor microenvironment. The complete analysis offered by existing tools highlights the ease with which researchers can turn the raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. The complete workflow is available at <TODO> .
 
 ### Pre-requisites
 
@@ -41,17 +41,18 @@ In this instructor-led live demo, we analyse Visium HD data segmented to cells, 
 
 Additional reading:
 
--   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book
+-   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
+
 
 ### Participation
 
-Participants can watch the live demo, or may prefer to follow the demonstration by bringing their laptops along. To follow the analysis on their own laptops, participants need to install the `EuroBioC2025_OSTA_Workshop` workflow by running
+Participants can watch the live demo, or may prefer to follow the demonstration by bringing their laptops along. To follow the analysis on their own laptops, participants need to install the `EuroBioC2025OSTAWorkshop` workflow by running:
 
-<!-- # ```{r} -->
-<!-- # # TODO -->
-<!-- # ``` -->
+```{r}
+BiocManager::install("EuroBioC2025OSTAWorkshop")
+```
 
-The relevant data are stored on Open Science Framework, and can be downloaded as delayed format cached on your laptop through `OSTA.data`:
+The relevant data are stored on Open Science Framework, and can be downloaded and cached on your laptop through `r BiocStyle::Biocpkg("OSTA.data")`:
 
 ```{r load-data-test, message=FALSE}
 library(OSTA.data)
@@ -62,12 +63,14 @@ unzip(pa, exdir=td)
 list.files(file.path(td, "segmented_outputs"))
 ```
 
-We also prepared a reader Visium HD segmented output at `./vignettes/utils.R`.
+We also prepared a reader for Visium HD segmented output at `./vignettes/utils.R`.
 
 ### *R* / *Bioconductor* packages used
 
-Bioconductor: Banksy, DropletUtils, ggspavis, OSTA.data, scater, scran, scuttle, spacexr, SpatialExperiment, SpotSweeper 
-CRAN: dplyr, igraph, ggplot2, magick, patchwork, pheatmap, sf, tidyr, tidyverse
+Bioconductor: Biobase, BiocStyle, Banksy, CARDspa, DropletUtils, GenomeInfoDb, ggspavis, OSTA.data, S4Vectors, scater, scran, scuttle, SingleCellExperiment, spacexr, SpatialExperiment, SpatialFeatureExperiment, spicyR, SpotSweeper, Statial, Voyager
+
+CRAN:         dplyr, ggplot2, grDevices, grid, here, igraph, magick, pals, patchwork, pheatmap, plotly, rlang, sf, tidyr, tidySpatialExperiment, tidyverse
+
 
 ### Time outline
 
@@ -104,7 +107,7 @@ The key steps to Visium HD data analysis are described in this workshop with div
 
 ## Introduction
 
-As of June 2025, Visium HD enabled direct output of H&E segmented cell-level data from SpaceRanger v4. This automation skips the need of an additional segmentation tool, such as `bin2cell`. Since biologists often find having cellular units more intuitive when deriving insights, this output can attract more interests than bin-level data. However, out of cell boundary bins can still benefit many research topics in the tumor microenvironment. In this workflow, we will demonstrate some analysis steps at the cell-level using the same dataset, subsetted to the same region, as in [@sec-seq-workflow-visium-hd; @Oliveira2024].
+As of June 2025, Visium HD enabled direct output of H&E segmented cell-level data from SpaceRanger v4. This automation skips the need of an additional segmentation tool, such as `bin2cell`. Since biologists often find having cellular units more intuitive when deriving insights, this output can attract more interests than bin-level data. However, please note that out of cell boundary bins can still benefit many research topics in the tumor microenvironment. In this workflow, we will demonstrate some analysis steps at the cell-level using the same dataset, subsetted to the same region, as in [@sec-seq-workflow-visium-hd; @Oliveira2024].
 
 ## Dependencies {#sec-seq-workflow-visium-hd-cell-load-data}
 
