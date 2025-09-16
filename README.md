@@ -1,52 +1,22 @@
-# BuildABiocWorkshop
+# Workflow: Visium HD cell-level
 
-This package is a template for building a Bioconductor workshop. The package
-includes Github actions to:
+Authors: Yixing E. Dong[^readme-1], Ellis Patrick[^readme-2].
 
-1. Set up bioconductor/bioconductor_docker:devel on Github resources
-2. Install package dependencies for your package (based on the `DESCRIPTION` file)
-3. Run `rcmdcheck::rcmdcheck`
-4. Build a pkgdown website and push it to github pages
-5. Build a docker image with the installed package and dependencies and deploy to [the Github Container Repository](https://docs.github.com/en/packages/working-with-a-github-packages-registry/working-with-the-container-registry#pulling-container-images) at the name `ghcr.io/gihub_user/repo_name`, all lowercase. 
+[^readme-1]: University of Lausanne, Lausanne, Switzerland
 
-## Responsibilities
+[^readme-2]: University of Sydney, Sydney, Australia
 
-Package authors are primarily responsible for:
+## Instructor name and contact information
 
-1. Creating a landing site of their choosing for their workshops (a website). This website should be listed in the `DESCRIPTION` file as the `URL`.
-2. Creating a docker image that will contain workshop materials and the installed packages necessary to run those materials. The name of the resulting docker image, including "tag" if desired, should be listed in a non-standard tag, `DockerImage:` in the `DESCRIPTION` file. 
+-   Yixing Estella Dong ([estella.yixing.dong\@gmail.com](mailto:estella.yixing.dong@gmail.com){.email})
+-   Ellis Patrick ([ellis.patrick\@sydney.edu.au](mailto:ellis.patrick@sydney.edu.au){.email})
 
-Both of those tasks can be accomplished using the Github actions included in this template package. The vignette accompanying this package describes how to accomplish both of these tasks.
+## Workshop Description
 
-## Details
+In this instructor-led live demo, we analyse Visium HD data segmented to cells, demonstrating use of `SpatialExperiment` and `sf` classes in R to import, organise, quality control, clustering, marker gene identificaiton, and label transfer to annotate the data. Spatial transcriptomics data with cell types annotated can reveal key insights with neighbourhood enrichment and spatial statistics, which will be demonstrated in a second half of the workshop. The complete analysis offered by existing tools highlights the ease with which researchers can turn the raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. The complete workflow is available at <https://lmweber.org/OSTA/>
 
-For detailed instructions, see the `How to build a workshop` article/vignette.
+## To run locally.
 
-## Results of successful deployment
+Clone the repo and follow the vignette in the `vignettes` folder. You will also need to install all the packages needed for the workshop. This can be done by
 
-- A working docker image that contains the installed package and dependencies.
-- An up-to-date `pkgdown` website at https://YOURUSERNAME.github.io/YOURREPOSITORYNAME/
-- Docker image will be tagged with `latest`, `sha-XXXXXX` where `XXXXXX` is the hash of the current `master` commit, and `master`. 
-
-## To use the resulting image:
-
-```sh
-docker run -e PASSWORD=<choose_a_password_for_rstudio> -p 8787:8787 YOURDOCKERIMAGENAME
-```
-Once running, navigate to http://localhost:8787/ and then login with `rstudio`:`yourchosenpassword`. 
-
-To try with **this** repository docker image:
-
-```sh
-docker run -e PASSWORD=abc -p 8787:8787 ghcr.io/bioconductor/buildabiocworkshop
-```
-
-*NOTE*: Running docker that uses the password in plain text like above exposes the password to others 
-in a multi-user system (like a shared workstation or compute node). In practice, consider using an environment 
-variable instead of plain text to pass along passwords and other secrets in docker command lines. 
-
-
-## Whatcha get
-
-- https://bioconductor.github.io/BuildABiocWorkshop
-- A Docker image that you can run locally, in the cloud, or (usually) even as a singularity container on HPC systems. 
+`devtools::install_github("estellad/EuroBioC2025_OSTA_Workshop")`
