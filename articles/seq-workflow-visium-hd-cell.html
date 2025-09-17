@@ -103,17 +103,18 @@
 <div class="section level3">
 <h3 id="workshop-description">Workshop Description<a class="anchor" aria-label="anchor" href="#workshop-description"></a>
 </h3>
-<p>In this instructor-led live demo, we analyse Visium HD data segmented
-to cells, demonstrating use of <code>SpatialExperiment</code> and
-<code>sf</code> classes in R to import, organise, quality control,
-clustering, marker gene identificaiton, and label transfer to annotate
-the data. Spatial transcriptomics data with cell types annotated can
-reveal key insights with neighbourhood enrichment and spatial
-statistics, which will be demonstrated in a second half of the workshop.
-The complete analysis offered by existing tools highlights the ease with
-which researchers can turn the raw counts from a Visium HD experiment
-into biological insights using Bioconductor and CRAN. The complete
-workflow is available at <a href="https://lmweber.org/OSTA/" class="external-link uri">https://lmweber.org/OSTA/</a></p>
+<p>In this instructor-led live demo, we analyze Visium HD data segmented
+into cells, demonstrating the use of the
+<code>SpatialFeatureExperiment</code> class in R to import, visualize,
+perform quality control, transfer labels from a single-cell reference to
+annotate the data, identify spatial domains, and select marker genes.
+Spatial transcriptomics (ST) data with annotated cell types can reveal
+key disease characteristics through neighborhood enrichment and spatial
+statistics, which will be demonstrated in the second half of the
+workshop. The complete analysis provided by existing tools highlights
+how easily researchers can transform raw counts from a Visium HD
+experiment into biological insights using Bioconductor and CRAN.
+Additional ST workflows are available at <a href="https://lmweber.org/OSTA/" class="external-link uri">https://lmweber.org/OSTA/</a>.</p>
 <div class="section level4">
 <h4 id="pre-requisites">Pre-requisites<a class="anchor" aria-label="anchor" href="#pre-requisites"></a>
 </h4>
@@ -129,19 +130,15 @@ manipulation</li>
 <ul>
 <li>Please have a read of <a href="https://lmweber.org/OSTA/pages/bkg-importing.html" class="external-link">Visium HD file
 structure</a> and <a href="https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html" class="external-link">bin-wise
-Visium HD analysis</a> in the OSTA book</li>
+Visium HD analysis</a> in the OSTA book.</li>
 </ul>
 </div>
 <div class="section level4">
-<h4 id="participation">Participation<a class="anchor" aria-label="anchor" href="#participation"></a>
+<h4 id="dataset">Dataset<a class="anchor" aria-label="anchor" href="#dataset"></a>
 </h4>
-<p>Participants can watch the live demo, or may prefer to follow the
-demonstration by bringing their laptops along. To follow the analysis on
-their own laptops, participants need to install the
-<code>EuroBioC2025_OSTA_Workshop</code> workflow by running</p>
-<p>The relevant data are stored on Open Science Framework, and can be
-downloaded as delayed format cached on your laptop through
-<code>OSTA.data</code>:</p>
+<p>The relevant data by Oliveira et al. (2024) are stored on Open
+Science Framework, and can be downloaded as delayed format cached on
+your laptop through <em><a href="https://bioconductor.org/packages/3.22/OSTA.data" class="external-link">OSTA.data</a></em>:</p>
 <div class="sourceCode" id="cb1"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/estellad/OSTA.data" class="external-link">OSTA.data</a></span><span class="op">)</span></span>
 <span><span class="va">id</span> <span class="op">&lt;-</span> <span class="st">"VisiumHD_HumanColon_Oliveira"</span></span>
@@ -151,17 +148,20 @@ downloaded as delayed format cached on your laptop through
 <span><span class="fu"><a href="https://rdrr.io/r/base/list.files.html" class="external-link">list.files</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/file.path.html" class="external-link">file.path</a></span><span class="op">(</span><span class="va">td</span>, <span class="st">"segmented_outputs"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] "cell_segmentations.geojson"      "filtered_feature_cell_matrix.h5"</span></span>
 <span><span class="co">#&gt; [3] "nucleus_segmentations.geojson"   "spatial"</span></span></code></pre></div>
-<p>We also prepared a reader Visium HD segmented output at
+<p>We prepared a reader for Visium HD segmented output at
 <code>./vignettes/utils.R</code>.</p>
 </div>
 <div class="section level4">
 <h4 id="r-bioconductor-packages-used">
 <em>R</em> / <em>Bioconductor</em> packages used<a class="anchor" aria-label="anchor" href="#r-bioconductor-packages-used"></a>
 </h4>
-<p>Bioconductor: Banksy, DropletUtils, ggspavis, OSTA.data, scater,
-scran, scuttle, spacexr, SpatialExperiment, SpotSweeper CRAN: dplyr,
-igraph, ggplot2, magick, patchwork, pheatmap, sf, tidyr, tidyverse,
-spicyR, Statial</p>
+<p>Bioconductor: Biobase, BiocStyle, Banksy, CARDspa, DropletUtils,
+GenomeInfoDb, ggspavis, OSTA.data, S4Vectors, scater, scran, scuttle,
+SingleCellExperiment, spacexr, SpatialExperiment,
+SpatialFeatureExperiment, spicyR, SpotSweeper, Statial, Voyager</p>
+<p>CRAN: dplyr, ggplot2, grDevices, grid, here, igraph, magick, pals,
+patchwork, pheatmap, plotly, rlang, sf, tidyr, tidySpatialExperiment,
+tidyverse</p>
 </div>
 <div class="section level4">
 <h4 id="time-outline">Time outline<a class="anchor" aria-label="anchor" href="#time-outline"></a>
@@ -189,18 +189,22 @@ spicyR, Statial</p>
 <td>5 mins</td>
 </tr>
 <tr class="odd">
+<td>Quality control</td>
+<td>10 mins</td>
+</tr>
+<tr class="even">
 <td>Cell annotation</td>
 <td>10 mins</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Domain identification</td>
 <td>10 mins</td>
 </tr>
-<tr class="odd">
+<tr class="even">
 <td>Spatial analysis</td>
 <td>30 mins</td>
 </tr>
-<tr class="even">
+<tr class="odd">
 <td>Conclusion</td>
 <td>5 mins</td>
 </tr>
@@ -211,20 +215,20 @@ spicyR, Statial</p>
 <div class="section level3">
 <h3 id="workshop-goals-and-objectives">Workshop goals and objectives<a class="anchor" aria-label="anchor" href="#workshop-goals-and-objectives"></a>
 </h3>
-<p>The key steps to Visium HD data analysis are described in this
-workshop with diverse visualization of methods used. The goal is to help
-a beginner bioinformatician working on Visium HD data to become familiar
-with each of the steps involved, as well as completing a standard
-analysis pipeline from start to finish.</p>
+<p>The key steps of Visium HD data analysis are described in this
+workshop, along with diverse visualizations of the methods used. The
+goal is to help beginner bioinformaticians working with Visium HD data
+become familiar with each step involved and complete a standard analysis
+pipeline from start to finish.</p>
 <div class="section level4">
 <h4 id="learning-goals">Learning goals<a class="anchor" aria-label="anchor" href="#learning-goals"></a>
 </h4>
 <ul>
-<li>learn how to analyse Visium HD data with cell segmentation
+<li>Learn how to analyze Visium HD data with cell segmentation
 output</li>
-<li>understanding of key steps and methods for deriving biological
+<li>Understand the key steps and methods for deriving biological
 insights</li>
-<li>aesthetic visualization of Visium HD data with existing R
+<li>Create aesthetic visualizations of Visium HD data using existing R
 packages</li>
 </ul>
 </div>
@@ -232,36 +236,33 @@ packages</li>
 <h4 id="learning-objectives">Learning objectives<a class="anchor" aria-label="anchor" href="#learning-objectives"></a>
 </h4>
 <ul>
-<li>read in cell segmentation <code>.geojson</code> data and format as a
-<code>sf</code> object</li>
-<li>manipulate cell polygon coordinates with scaling factor and
-alignment with H&amp;E image</li>
-<li>read in count data and format as a <code>SpatialExperiment</code>
-object</li>
-<li>perform spatially-aware quality control, clustering, marker gene
-identification</li>
-<li>perform label transfering from single-cell reference data to spatial
-data via deconvolution</li>
-<li>visualization of Visium HD data as polygons, of the cell centroids,
-and in reduced dimensions</li>
-<li>checking concordance between cell typing results with heatmaps</li>
-<li>perform spatial analysis of a single image</li>
+<li>Read Visium HD segmentation output data as a
+<code>SpatialFeatureExperiment</code> object</li>
+<li>Understand spatially aware quality control metrics</li>
+<li>Perform label transfer from single-cell reference data to spatial
+data</li>
+<li>Identify spatial domains and marker genes for each region</li>
+<li>Visualize Visium HD data as polygons or cell centroids</li>
+<li>Check concordance between cell typing results and spatial domains
+using heatmaps</li>
+<li>Perform spatial analysis of a single image</li>
 </ul>
 </div>
 </div>
 <div class="section level3">
 <h3 id="introduction">Introduction<a class="anchor" aria-label="anchor" href="#introduction"></a>
 </h3>
-<p>As of June 2025, Visium HD enabled direct output of H&amp;E segmented
-cell-level data from SpaceRanger v4. This automation skips the need of
-an additional segmentation tool, such as <code>bin2cell</code>. Since
-biologists often find having cellular units more intuitive when deriving
-insights, this output can attract more interests than bin-level data.
-However, out of cell boundary bins can still benefit many research
+<p>As of June 2025, Visium HD enables direct output of H&amp;E-segmented
+cell-level data from <a href="https://www.10xgenomics.com/analysis-guides/segmentation-visium-hd" class="external-link">SpaceRanger
+v4</a>. This automation removes the need for an additional segmentation
+tool, such as <code>bin2cell</code>. Since biologists often find
+cellular units more intuitive for deriving insights, this output may
+attract more interest than bin-level data. However, bins outside cell
+boundaries can still provide valuable information for many research
 topics in the tumor microenvironment. In this workflow, we will
-demonstrate some analysis steps at the cell-level using the same
-dataset, subsetted to the same region, as in <span class="citation">[@sec-seq-workflow-visium-hd;
-@Oliveira2024]</span>.</p>
+demonstrate several analysis steps at the cell level using the same
+dataset, subsetted to the same region, as in the Sequencing-based
+platforms - Workflow: Visium HD chapter of OSTA book.</p>
 </div>
 <div class="section level3">
 <h3 id="sec-seq-workflow-visium-hd-cell-load-data">Dependencies<a class="anchor" aria-label="anchor" href="#sec-seq-workflow-visium-hd-cell-load-data"></a>
@@ -302,13 +303,8 @@ dataset, subsetted to the same region, as in <span class="citation">[@sec-seq-wo
 <div class="section level3">
 <h3 id="load-spatial-data">Load spatial data<a class="anchor" aria-label="anchor" href="#load-spatial-data"></a>
 </h3>
-<p>Output files from SpaceRanger v4 are listed in
-<code>/segmented_outputs</code> folder, with the expected structure
-detailed in <span class="citation">@sec-bkg-importing</span>. We start
-with read in cell segmentation as a <code>sf</code> object, scaling
-factor <code>.json</code> file, and image file. We will use high
-resolution image, as it gives expected H&amp;E details under segmented
-cell masks.</p>
+<p>We source the reader in <code>utils.R</code> and specify alias for
+plotting themes.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"vignettes/utils.R"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -328,16 +324,22 @@ cell masks.</p>
 <span></span>
 <span><span class="va">common_args_heatmap</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>cellwidth<span class="op">=</span><span class="fl">10</span>, cellheight<span class="op">=</span><span class="fl">10</span>, </span>
 <span>                            treeheight_row<span class="op">=</span><span class="fl">5</span>, treeheight_col<span class="op">=</span><span class="fl">5</span><span class="op">)</span></span></code></pre></div>
+<p>Output files from SpaceRanger v4 are listed in
+<code>/segmented_outputs</code> folder, with the expected structure
+detailed in the Background - Importing data chapter of the OSTA
+book.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">id</span> <span class="op">&lt;-</span> <span class="st">"VisiumHD_HumanColon_Oliveira"</span></span>
 <span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/OSTA.data/man/OSTA.data.html" class="external-link">OSTA.data_load</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">td</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip</a></span><span class="op">(</span><span class="va">pa</span>, exdir<span class="op">=</span><span class="va">td</span><span class="op">)</span></span></code></pre></div>
+<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting.  -->
+<p>Read in Visium HD cell segmented data as a
+<code>SpatialFeatureExperiment</code> object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="co"># Read in Visium HD cell segmented data as SpatialFeatureExperiment object</span></span>
-<span><span class="va">vhdsfe</span> <span class="op">&lt;-</span> <span class="fu">readVisiumHDCellSeg</span><span class="op">(</span><span class="va">td</span>, res <span class="op">=</span> <span class="st">"hires"</span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="va">vhdsfe</span> <span class="op">&lt;-</span> <span class="fu">readVisiumHDCellSeg</span><span class="op">(</span><span class="va">td</span>, res <span class="op">=</span> <span class="st">"hires"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading layer `cell_segmentations' from data source </span></span>
-<span><span class="co">#&gt;   `/tmp/RtmpGIvFrg/file80c25de2b7f/segmented_outputs/cell_segmentations.geojson' </span></span>
+<span><span class="co">#&gt;   `/tmp/RtmptDBoqN/file8e25ebc7d2/segmented_outputs/cell_segmentations.geojson' </span></span>
 <span><span class="co">#&gt;   using driver `GeoJSON'</span></span>
 <span><span class="co">#&gt; Simple feature collection with 220704 features and 1 field</span></span>
 <span><span class="co">#&gt; Geometry type: POLYGON</span></span>
@@ -349,16 +351,16 @@ cell masks.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># </span><span style="color: #555555;">Features = 18132 | Cells = 220703 | Assays = counts</span></span></span>
 <span><span class="co">#&gt;    .cell Sample              Barcode sample_id pxl_col_in_hires pxl_row_in_hires</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmpGIvFrg/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmptDBoqN/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 220,693 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: pxl_col_in_fullres &lt;dbl&gt;, pxl_row_in_fullres &lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
@@ -368,14 +370,9 @@ cell masks.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Graphs:</span></span>
 <span><span class="co">#&gt; sample01:</span></span></code></pre></div>
-<p>First, we need to scale the coordinates to match the high resolution
-image. In addition, the y-axis coordinates should be flipped, as R uses
-a different origin than the image coordinate system. While
-<code>ggspavis</code> manages this internally for Visium, we will
-proceed with a manual plotting approach for Visium HD polygons (rather
-than cell centroid x and y) to maintain clarity.</p>
-<p>To keep runtimes low, our downstream analysis will be performed on a
-subset area of 16 µm bins (1/64 of the data coverage area).</p>
+<p>To keep runtime low, our downstream analysis will be performed on a
+subset area of 16 µm bins (1/64 of the data coverage area). We restrict
+to the same region from as we have done in the OSTA book.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu">subsetVisiumHD</span><span class="op">(</span><span class="va">vhdsfe</span>,</span>
 <span>                         xmin <span class="op">=</span> <span class="fl">4214.937</span>, xmax <span class="op">=</span> <span class="fl">4465.761</span>,</span>
@@ -428,7 +425,7 @@ will work on:</p>
 <div class="section level3">
 <h3 id="which-cells-passed-quality-check">Which cells passed quality check?<a class="anchor" aria-label="anchor" href="#which-cells-passed-quality-check"></a>
 </h3>
-<p>Get cell-level QC metrics for visualization.</p>
+<p>Get cell-level QC metrics for visualization with <em><a href="https://bioconductor.org/packages/3.22/scuttle" class="external-link">scuttle</a></em>.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Visualize library size to the polygons</span></span>
 <span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/grep.html" class="external-link">grep</a></span><span class="op">(</span><span class="st">"^MT-"</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -444,6 +441,8 @@ will work on:</p>
 <span><span class="co">#&gt; 84476 cellid_000084476-1 1004 6.912743           4.681275</span></span>
 <span><span class="co">#&gt; 84504 cellid_000084504-1  835 6.728629           5.029940</span></span>
 <span><span class="co">#&gt; 84560 cellid_000084560-1  436 6.079933           2.981651</span></span></code></pre></div>
+<p>Here is an overview of the cells colored by their log library size
+and mitochondrial percentage.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"log_sum"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -460,8 +459,10 @@ will work on:</p>
 <div class="section level4">
 <h4 id="spotsweeper">SpotSweeper<a class="anchor" aria-label="anchor" href="#spotsweeper"></a>
 </h4>
-<p>SpotSweeper determine outliers based on low log-library size, few
-uniquely detected features, or high mitochondrial count fraction:</p>
+<p><em><a href="https://bioconductor.org/packages/3.22/SpotSweeper" class="external-link">SpotSweeper</a></em>
+determines outliers based on low log-library size, few uniquely detected
+features, or a high mitochondrial fraction compared to their surrounding
+neighborhood:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpotSweeper/man/localOutliers.html" class="external-link">localOutliers</a></span><span class="op">(</span><span class="va">vhdsub</span>, metric<span class="op">=</span><span class="st">"sum"</span>, direction<span class="op">=</span><span class="st">"lower"</span>, log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpotSweeper/man/localOutliers.html" class="external-link">localOutliers</a></span><span class="op">(</span><span class="va">vhdsub</span>, metric<span class="op">=</span><span class="st">"detected"</span>, direction<span class="op">=</span><span class="st">"lower"</span>, log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
@@ -476,8 +477,8 @@ uniquely detected features, or high mitochondrial count fraction:</p>
 <span><span class="co">#&gt; FALSE  TRUE </span></span>
 <span><span class="co">#&gt;  4406    13</span></span></code></pre></div>
 <p>We can visualize the local outliers identified by
-<code>SpotSweeper</code> in space. It is difficult to see as we only
-have few small cells identified as outliers per flag.</p>
+<code>SpotSweeper</code> spatially. However, they are difficult to see,
+as only a few small cells are flagged as outliers.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">common_args_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">NA</span>, color <span class="op">=</span> <span class="st">"grey90"</span>, linewidth <span class="op">=</span> <span class="fl">0.1</span>, </span>
 <span>                    colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span></span>
@@ -569,18 +570,19 @@ runtime manageable.</p>
 transcriptomics<a class="anchor" aria-label="anchor" href="#rctd---robust-decomposition-of-cell-type-mixtures-in-spatial-transcriptomics"></a>
 </h4>
 <p>There are many ways to transfer labels from single-cell data to
-spatial data. We use RCTD because it performs competitively in public
-benchmarks, models mixed signals explicitly, and assigns each spatial
-unit a clear class as a singlet or as one of several doublet types. RCTD
-was originally designed for spot-based platforms such as 10x Visium,
-where each spot captures RNA from multiple cells. It treats the observed
-counts in a spot as a mixture of reference cell-type expression profiles
-and uses a likelihood model to estimate non-negative weights for each
-candidate cell type. It then compares a singlet model against a doublet
-model to determine whether one cell type is sufficient to explain the
-counts or whether two are required. The method also learns scale factors
-to account for platform differences and total RNA content, which helps
-it transfer labels across technologies.</p>
+spatial data. We use <em><a href="https://bioconductor.org/packages/3.22/RCTD" class="external-link">RCTD</a></em> because
+it performs competitively in public benchmarks, models mixed signals
+explicitly, and assigns each spatial unit a clear class as a singlet or
+as one of several doublet types. RCTD was originally designed for
+spot-based platforms such as 10x Visium, where each spot captures RNA
+from multiple cells. It treats the observed counts in a spot as a
+mixture of reference cell-type expression profiles and uses a likelihood
+model to estimate non-negative weights for each candidate cell type. It
+then compares a singlet model against a doublet model to determine
+whether one cell type is sufficient to explain the counts or whether two
+are required. The method also learns scale factors to account for
+platform differences and total RNA content, which helps it transfer
+labels across technologies.</p>
 <p>In our setting we apply RCTD at cellular resolution using segmented
 Visium HD data. Although each unit is intended to represent a single
 cell, there are still cases where the measured counts reflect more than
@@ -607,7 +609,7 @@ version.</p>
 <span><span class="co"># ## Perform the deconvolution.</span></span>
 <span><span class="co"># rctd_result_level1 &lt;- runRctd(rctd_data, max_cores = 4, rctd_mode = "doublet")</span></span>
 <span><span class="co"># # save(rctd_result_level1, file = here::here("data/rctd_result_level1.RData"))</span></span></code></pre></div>
-<p>Note: RCTD does have some internal QC, so lets check nothing was
+<p>Note: RCTD does have some internal QC, so lets check if anything was
 filtered out prior to running deconvolution.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
@@ -618,33 +620,33 @@ filtered out prior to running deconvolution.</p>
 <span><span class="co">#&gt; [1] "91874"</span></span>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">discard</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span> <span class="op">==</span> <span class="st">"91874"</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
-<span><span class="co"># [1] TRUE</span></span>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">sum_outliers</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span> <span class="op">==</span> <span class="st">"91874"</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] TRUE</span></span>
-<span><span class="co"># [1] TRUE</span></span>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">sum</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span> <span class="op">==</span> <span class="st">"91874"</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] 14</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">sum</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 14 18 19 19 22 23</span></span></code></pre></div>
-<p>The spot labels are saved in the colData as <code>spot_class</code>.
-This provides a quick quality check: a majority of singlet
-classifications at cell resolution is expected and supports the validity
-of the H&amp;E-guided segmentation.</p>
+<p>The spot labels are saved in the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> as
+<code>spot_class</code>. This provides a quick quality check: a majority
+of singlet classifications at cell resolution is expected and supports
+the validity of the H&amp;E-guided segmentation.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">rctd_result_level1</span><span class="op">$</span><span class="va">spot_class</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;            reject           singlet   doublet_certain doublet_uncertain </span></span>
 <span><span class="co">#&gt;               115              2660              1347               296</span></span></code></pre></div>
 <p>We then synchronise the deconvolution labels back into our
-<code>vhdsub</code> SpatialExperiment object by matching cell_ids to
-keep everything aligned.</p>
+<code>vhdsub</code> <code>SpatialFeatureExperiment</code> object by
+matching cell ids to keep everything aligned.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Subset to RCTD filtered object for convenience</span></span>
 <span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Here we use match to ensure that we match the cell IDs</span></span>
-<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellTypeClass</span> <span class="op">&lt;-</span> <span class="va">rctd_result_level1</span><span class="op">$</span><span class="va">spot_class</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rctd_result_level1</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
-<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span> <span class="op">&lt;-</span> <span class="va">rctd_result_level1</span><span class="op">$</span><span class="va">first_type</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rctd_result_level1</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellTypeClass</span> <span class="op">&lt;-</span> <span class="va">rctd_result_level1</span><span class="op">$</span><span class="va">spot_class</span><span class="op">[</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>,<span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rctd_result_level1</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
+<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span> <span class="op">&lt;-</span> <span class="va">rctd_result_level1</span><span class="op">$</span><span class="va">first_type</span><span class="op">[</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">rctd_result_level1</span><span class="op">)</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="co"># Double check that the numbers of the cell types is consistent</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span></span>
@@ -655,6 +657,8 @@ keep everything aligned.</p>
 <span><span class="co">#&gt;                   529                   547                    11 </span></span>
 <span><span class="co">#&gt;         Smooth_Muscle               T_cells                 Tumor </span></span>
 <span><span class="co">#&gt;                    90                   262                  1012</span></span></code></pre></div>
+<p>We can visualize the spatial location of singlets, doublets, or the
+assigned cell types by <code>RCTD</code>.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"cellTypeClass"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -665,22 +669,21 @@ keep everything aligned.</p>
 <span></span>
 <span><span class="op">(</span><span class="va">p0</span> <span class="op">|</span> <span class="va">p1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/rctd-result-discrete-1.png" width="768"></p>
+<p>Previously, we found one cell was flagged as a local outlier by
+<code>SpotSweeper</code>, and now we can check its property.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">subsets_mt_percent_outliers</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; FALSE  TRUE </span></span>
 <span><span class="co">#&gt;  4418     1</span></span>
-<span><span class="co"># FALSE  TRUE </span></span>
-<span><span class="co">#  4241     1 </span></span>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">[</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">subsets_mt_percent_outliers</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] "T_cells"</span></span>
-<span><span class="co"># [1] NA</span></span>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellTypeClass</span><span class="op">[</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">subsets_mt_percent_outliers</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] doublet_uncertain</span></span>
-<span><span class="co">#&gt; Levels: reject singlet doublet_certain doublet_uncertain</span></span>
-<span><span class="co"># reject</span></span></code></pre></div>
-<p>Filter out low quality cells from the <code>sf</code> and
-<code>SpatialExperiment</code> object.</p>
+<span><span class="co">#&gt; Levels: reject singlet doublet_certain doublet_uncertain</span></span></code></pre></div>
+<p>Filter out low quality cells from the
+<code>SpatialFeatureExperiment</code> object, prior to spatial
+clustering.</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span><span class="op">[</span>, <span class="op">!</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">discard</span><span class="op">]</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
@@ -688,11 +691,10 @@ keep everything aligned.</p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="spatial-domain-identification">Spatial domain Identification<a class="anchor" aria-label="anchor" href="#spatial-domain-identification"></a>
+<h3 id="spatial-domain-identification">Spatial domain identification<a class="anchor" aria-label="anchor" href="#spatial-domain-identification"></a>
 </h3>
-<p>First, we identify highly variable genes (HVGs) in the target area:
-<span class="aside">Note that spatially variable genes (SVGs) could be
-used instead</span></p>
+<p>First, we identify highly variable genes (HVGs) in the target area.
+Note that spatially variable genes (SVGs) could be used instead.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
 <span><span class="va">dec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html" class="external-link">modelGeneVar</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
@@ -735,8 +737,8 @@ spatial domains.</p>
 <span>  <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/clus-spa-umap-1.png" width="384"></p>
 <p>Next, we can perform differential gene expresison (DGE) analysis to
-identify markers for each cluster; c.f. <span class="citation">@sec-crs-signatures</span>. We also compute the
-cluster-wise mean expression of selected markers:</p>
+identify markers for each cluster. We also compute the cluster-wise mean
+expression of selected markers:</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># differential gene expression analysis</span></span>
 <span><span class="va">mgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scran/man/findMarkers.html" class="external-link">findMarkers</a></span><span class="op">(</span><span class="va">vhdsub</span>, groups <span class="op">=</span> <span class="va">vhdsub</span><span class="op">$</span><span class="va">Banksy</span>, direction <span class="op">=</span> <span class="st">"up"</span><span class="op">)</span></span>
@@ -791,9 +793,10 @@ heatmap:</p>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">center_title</span> <span class="op">&amp;</span> <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-dec-clu-xy-1.png" width="768"></p>
-<p>We observe that Banksy delineates tissue borders very well, while
-deconvolution provides direct biological insight into the underlying
-clusters. Their concordance can be visualized using a heatmap:</p>
+<p>We observe that <code>Banksy</code> delineates tissue borders very
+well, while <code>RCTD</code> provides direct biological insight into
+the underlying clusters. Their concordance can be visualized using a
+heatmap:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">Banksy</span>, <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rlang.r-lib.org/reference/exec.html" class="external-link">exec</a></span><span class="op">(</span><span class="va">pheatmap</span>, <span class="va">fq</span>, <span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">common_args_heatmap</span><span class="op">)</span></span></code></pre></div>
@@ -806,12 +809,13 @@ clusters. Their concordance can be visualized using a heatmap:</p>
 <h4 id="localisation">Localisation<a class="anchor" aria-label="anchor" href="#localisation"></a>
 </h4>
 <p>We next quantify spatial proximity between annotated cell types. The
-<code><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise()</a></code> function from the <code>spicyR</code> package
-computes the K-cross function across all pairs of classes, summarising
-whether cell type A tends to appear within distance r of cell type B
-more often than expected under spatial randomness. Here we use a radius
-of 200 units (~50 microns) to capture immediate neighbourhood effects at
-approximately one to two cell diameters.</p>
+<code><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise()</a></code> function from the <em><a href="https://bioconductor.org/packages/3.22/spicyR" class="external-link">spicyR</a></em>
+package computes the K-cross function across all pairs of classes,
+summarising whether cell type A tends to appear within distance
+<code>r</code> of cell type B more often than expected under spatial
+randomness. Here we use a radius of 200 units (~50 microns) to capture
+immediate neighbourhood effects at approximately one to two cell
+diameters.</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">crossK</span> <span class="op">=</span> <span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise</a></span><span class="op">(</span><span class="va">vhdsub</span>, </span>
 <span>                     r <span class="op">=</span> <span class="fl">200</span>, </span>
@@ -844,19 +848,19 @@ cells.</p>
 </h4>
 <p>While pairwise proximity statistics are a sensible first step, they
 can sometimes be misleading because they ignore the broader tissue
-context. For example, the K-cross function from spicyR will tell us
-whether two cell types are found close together more often than expected
-under a random distribution, but it does not ask conditional questions.
-Biologists, however, often want to know things like:</p>
+context. For example, the K-cross function from <code>spicyR</code> will
+tell us whether two cell types are found close together more often than
+expected under a random distribution, but it does not ask conditional
+questions. Biologists, however, often want to know things like:</p>
 <p><em>“Do immune cells cluster more tightly with tumour than we would
 expect, even after accounting for the fact that immune cells already
 tend to occur together?”</em></p>
-<p>This is where <code>Kontextual</code> from the <code>Statial</code>
-package comes in. Kontextual extends beyond pairwise enrichment by
-creating a contextual null model. Instead of comparing two cell types
-against a fully random distribution, it compares them against what we
-would expect given the observed mixture of other neighbouring cell
-types. In practice, this means that Kontextual is testing whether a
+<p>This is where <code>Kontextual</code> from the <em><a href="https://bioconductor.org/packages/3.22/Statial" class="external-link">Statial</a></em>
+package comes in. <code>Kontextual</code> extends beyond pairwise
+enrichment by creating a contextual null model. Instead of comparing two
+cell types against a fully random distribution, it compares them against
+what we would expect given the observed mixture of other neighbouring
+cell types. In practice, this means that Kontextual is testing whether a
 particular association is stronger (or weaker) than would be expected
 given the local cellular environment.</p>
 <p>For this demonstration, we define an immune context composed of T
@@ -897,7 +901,7 @@ context.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/plotly/man/ggplotly.html" class="external-link">ggplotly</a></span><span class="op">(</span><span class="va">plotKontext</span><span class="op">)</span></span></code></pre></div>
 <div class="plotly html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:768px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"80c30d9eb7a":{"x":{},"y":{},"label":{},"type":"scatter"},"80c41ea9275":{"yintercept":{}},"80c73322cc7":{"xintercept":{}}},"cur_data":"80c30d9eb7a","visdat":{"80c30d9eb7a":["function (y) ","x"],"80c41ea9275":["function (y) ","x"],"80c73322cc7":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"8e26152ffb7":{"x":{},"y":{},"label":{},"type":"scatter"},"8e2372fd2d4":{"yintercept":{}},"8e2496d3490":{"xintercept":{}}},"cur_data":"8e26152ffb7","visdat":{"8e26152ffb7":["function (y) ","x"],"8e2372fd2d4":["function (y) ","x"],"8e2496d3490":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
 around Tumour) to confirm at which scales the effect appears, which is
 often informative for processes like invasion fronts or peritumoural
 niches.</p>
@@ -942,7 +946,7 @@ functional interaction. To uncover biological relevance, we need to test
 whether changes in the microenvironment are associated with measurable
 shifts in gene expression within a given cell type.</p>
 <p>This is the motivation behind <code>spatioMark</code>, part of the
-Statial package. The idea is simple:</p>
+<code>Statial</code> package. The idea is simple:</p>
 <ul>
 <li><p>take a target population (for example, Myeloid cells),</p></li>
 <li><p>quantify its local environment (how many Tumour cells, T cells,
@@ -950,15 +954,15 @@ fibroblasts, etc. are nearby within a certain radius),</p></li>
 <li><p>and ask whether the transcriptomes of the target cells vary with
 that environment.</p></li>
 </ul>
-<p>In practice, spatioMark first computes local abundances of each cell
-type around every cell, giving each cell a numerical “neighbourhood
-profile.” These covariates then feed into a gene-wise regression model.
-For each gene expressed in the target population, spatioMark fits a
-generalised linear model. As we have count data in this case, we
-leverage functionality in the <code>edgeR</code> package to model the
-data as negative binomial. The coefficients tell us whether gene
-expression increases or decreases as the abundance of a chosen neighbour
-rises.</p>
+<p>In practice, <code>spatioMark</code> first computes local abundances
+of each cell type around every cell, giving each cell a numerical
+“neighbourhood profile.” These covariates then feed into a gene-wise
+regression model. For each gene expressed in the target population,
+spatioMark fits a generalised linear model. As we have count data in
+this case, we leverage functionality in the <code>edgeR</code> package
+to model the data as negative binomial. The coefficients tell us whether
+gene expression increases or decreases as the abundance of a chosen
+neighbour rises.</p>
 <p>First, we need to quantify the abundance of each cell type around
 each cell.</p>
 <div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
@@ -1024,9 +1028,9 @@ patterns when they are located close to Tumour cells.</p>
 <span><span class="co">#&gt; 20 8.670557e-07 3.681952e-04</span></span></code></pre></div>
 <p>The previous output is a ranked list of genes, highlighting markers
 that change as Myeloid cells are near tumour cells. One of the top genes
-on this list is SPP1 which is known to be expressed in tumour-associated
-macrophages. We can visualise this relationship using the
-<code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges()</a></code> function.</p>
+on this list is <em>SPP1</em> which is known to be expressed in
+tumour-associated macrophages. We can visualise this relationship using
+the <code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges()</a></code> function.</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
@@ -1045,7 +1049,7 @@ macrophages. We can visualise this relationship using the
 <span><span class="va">p</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-plot-spp1-1.png" width="672"></p>
 <p>However, there are some genes that not expressed in macrophages such
-as CEACAM6 which are likely lateral spillover or diffusion.</p>
+as <em>CEACAM6</em> which are likely lateral spillover or diffusion.</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sce</span><span class="op">[</span>, <span class="va">down_sample</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/ttservice/man/join_features.html" class="external-link">join_features</a></span><span class="op">(</span>features <span class="op">=</span> <span class="st">"CEACAM6"</span>, shape <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1056,14 +1060,14 @@ as CEACAM6 which are likely lateral spillover or diffusion.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-ceacam6-check-1.png" width="576"></p>
-<p>Because we already computed RCTD weights, we can mitigate
-contamination by adding deconvolution-derived components as covariates
-to our models. By storing the RCTD cell-type weight matrix into
-<code>reducedDim(vhdsub, "RCTD")</code>, we can pass “RCTD” to the
-contamination argument of <code><a href="https://sydneybiox.github.io/Statial/reference/calcStateChanges.html" class="external-link">calcStateChanges()</a></code>. SpatioMark
-will use these estimates of contamination in its modelling to hopefully
-remove false positives like CEACAM6 while preserving genuine
-relationships.</p>
+<p>Because we already computed <code>RCTD</code> weights, we can
+mitigate contamination by adding deconvolution-derived components as
+covariates to our models. By storing the <code>RCTD</code> cell-type
+weight matrix into <code>reducedDim(vhdsub, "RCTD")</code>, we can pass
+<code>"RCTD"</code> to the contamination argument of
+<code><a href="https://sydneybiox.github.io/Statial/reference/calcStateChanges.html" class="external-link">calcStateChanges()</a></code>. SpatioMark will use these estimates of
+contamination in its modelling to hopefully remove false positives like
+<em>CEACAM6</em> while preserving genuine relationships.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">contam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rctd_result_level1</span>,<span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1092,10 +1096,10 @@ relationships.</p>
 <h3 id="extension">Extension<a class="anchor" aria-label="anchor" href="#extension"></a>
 </h3>
 <p>You can try using a finer resolution of cell type classified by
-RCTD.</p>
+<code>RCTD</code>.</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"data/rctd_result_level2.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Or you can try using a different deconvulation algorithm.</p>
+<p>Or you can try using a different deconvolution algorithm.</p>
 <div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2025</span><span class="op">)</span></span>
 <span><span class="va">vhd2</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span></span>
