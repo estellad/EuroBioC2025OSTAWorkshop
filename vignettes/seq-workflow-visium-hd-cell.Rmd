@@ -43,7 +43,7 @@ In this instructor-led live demo, we analyze Visium HD data segmented into cells
 
 Additional reading:
 
--   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
+-   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing-data.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
 
 
 ### Dataset
