@@ -2,7 +2,7 @@
 
 <p align="left">
 
-<img src="inst/www/01_Bioc.png" width="15%" style="margin-right:20px;"/> <img src="inst/www/02_OSTA.png" width="15%" style="margin-right:20px;"/> <img src="inst/www/03_OSTA.data.png" width="15%"/>
+<img src="man/figures/01_Bioc.png" width="15%" style="margin-right:20px;"/> <img src="man/figures/02_OSTA.png" width="15%" style="margin-right:20px;"/> <img src="man/figures/03_OSTA.data.png" width="15%"/>
 
 </p>
 

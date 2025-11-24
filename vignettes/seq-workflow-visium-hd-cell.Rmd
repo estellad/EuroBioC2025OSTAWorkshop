@@ -547,6 +547,13 @@ fq <- prop.table(table(vhdsub$Banksy, vhdsub$cellType), 1)
 exec(pheatmap, fq, !!!common_args_heatmap)
 ```
 
+## Spatial statistics 
+
+What makes spatial transcriptomics more powerful than scRNA-seq is its linkage to spatial statistics. Visium HD cell level data can be modeled as a point pattern process
+
+### Ripley's K
+
+
 ## Interrogating the spatial arrangement of our cells.
 
 ### Localisation
@@ -745,6 +752,7 @@ stateChangesCon <- calcStateChanges(
 
 stateChangesCon |> filter(marker == "CEACAM6")
 ```
+
 
 
 ## Extension
