@@ -78,25 +78,82 @@
 <div class="section level1">
 <div class="page-header"><h1 id="workflow-visium-hd-cell-level">Workflow: Visium HD cell-level<a class="anchor" aria-label="anchor" href="#workflow-visium-hd-cell-level"></a>
 </h1></div>
-<p>Authors: Yixing E. Dong<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, Ellis Patrick<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
+<p align="left">
+</p>
+<p><img src="inst/www/01_Bioc.png" width="15%" style="margin-right:20px;"><img src="inst/www/02_OSTA.png" width="15%" style="margin-right:20px;"><img src="inst/www/03_OSTA.data.png" width="15%"></p>
+
 <div class="section level2">
 <h2 id="instructor-name-and-contact-information">Instructor name and contact information<a class="anchor" aria-label="anchor" href="#instructor-name-and-contact-information"></a>
 </h2>
 <ul>
-<li>Yixing Estella Dong (<a href="mailto:estella.yixing.dong@gmail.com" class="email">estella.yixing.dong@gmail.com</a>)</li>
-<li>Ellis Patrick (<a href="mailto:ellis.patrick@sydney.edu.au" class="email">ellis.patrick@sydney.edu.au</a>)</li>
+<li>Estella Yixing Dong<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a> (<a href="mailto:estella.yixing.dong@gmail.com" class="email">estella.yixing.dong@gmail.com</a>)</li>
+<li>Ellis Patrick<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a> (<a href="mailto:ellis.patrick@sydney.edu.au" class="email">ellis.patrick@sydney.edu.au</a>)</li>
 </ul>
 </div>
 <div class="section level2">
-<h2 id="workshop-description">Workshop Description<a class="anchor" aria-label="anchor" href="#workshop-description"></a>
+<h2 id="pre-requisites">Pre-requisites<a class="anchor" aria-label="anchor" href="#pre-requisites"></a>
 </h2>
-<p>In this instructor-led live demo, we analyse Visium HD data segmented to cells, demonstrating use of <code>SpatialExperiment</code> and <code>sf</code> classes in R to import, organise, quality control, clustering, marker gene identificaiton, and label transfer to annotate the data. Spatial transcriptomics data with cell types annotated can reveal key insights with neighbourhood enrichment and spatial statistics, which will be demonstrated in a second half of the workshop. The complete analysis offered by existing tools highlights the ease with which researchers can turn the raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. The complete workflow is available at <a href="https://lmweber.org/OSTA/" class="external-link uri">https://lmweber.org/OSTA/</a></p>
+<ul>
+<li>Intermediate knowledge of spatial transcriptomics</li>
+<li>Intermediate knowledge of R syntax</li>
+<li>Familiarity with <code>SpatialExperiment</code> classes and object manipulation</li>
+<li>Familiarity with spatial <code>sf</code> classes and object manipulation</li>
+</ul>
+<div class="section level3">
+<h3 id="additional-reading">Additional reading:<a class="anchor" aria-label="anchor" href="#additional-reading"></a>
+</h3>
+<ul>
+<li>Please have a read of <a href="https://lmweber.org/OSTA/pages/bkg-importing-data.html" class="external-link">Visium HD file structure</a> and <a href="https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html" class="external-link">bin-wise Visium HD analysis</a> in the OSTA book.</li>
+</ul>
+</div>
 </div>
 <div class="section level2">
-<h2 id="to-run-locally">To Run Locally<a class="anchor" aria-label="anchor" href="#to-run-locally"></a>
+<h2 id="workshop-description">Workshop description<a class="anchor" aria-label="anchor" href="#workshop-description"></a>
+</h2>
+<p>In this instructor-led live demo, we analyze Visium HD data segmented into cells, demonstrating the use of the <code>SpatialFeatureExperiment</code> class in R to import, visualize, perform quality control, transfer labels from a single-cell reference to annotate the data, identify spatial domains, and select marker genes. Spatial transcriptomics (ST) data with annotated cell types can reveal key disease characteristics through neighborhood enrichment and spatial statistics, which will be demonstrated in the second half of the workshop. The complete analysis provided by existing tools highlights how easily researchers can transform raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN.</p>
+</div>
+<div class="section level2">
+<h2 id="to-run-locally">To run locally<a class="anchor" aria-label="anchor" href="#to-run-locally"></a>
 </h2>
 <p>Clone the repo and follow the vignette in the <code>vignettes</code> folder. You will also need to install all the packages needed for the workshop. This can be done by</p>
-<p><code>devtools::install_github("estellad/EuroBioC2025_OSTA_Workshop")</code></p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" tabindex="-1"></a><span class="ex">devtools::install_github</span><span class="er">(</span><span class="st">"estellad/EuroBioC2025_OSTA_Workshop"</span><span class="kw">)</span></span></code></pre></div>
+</div>
+<div class="section level2">
+<h2 id="docker-image">Docker image<a class="anchor" aria-label="anchor" href="#docker-image"></a>
+</h2>
+<p>A Docker image containing a complete version of all materials used in the workshop is also available.</p>
+<p>First, download Docker as an Application and finish the installation. In a new tab of your terminal, make sure <code>which docker</code> is printed with a valid path.</p>
+<p>Next, depending on the chip of your Mac, for instance, try one of the followings to download the container to your local machine. Note this can be a large download (disk usage: ~ 12 GB, content size ~ 4 GB).</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" tabindex="-1"></a><span class="ex">docker</span> pull ghcr.io/estellad/eurobioc2025ostaworkshop:latest</span></code></pre></div>
+<div class="sourceCode" id="cb3"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" tabindex="-1"></a><span class="ex">docker</span> pull <span class="at">--platform</span> linux/amd64 ghcr.io/estellad/eurobioc2025ostaworkshop:latest</span></code></pre></div>
+<p>To run the Docker image, run one of the followings, matching the previous platform specification:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">-e</span> PASSWORD=bioc <span class="at">-p</span> 8787:8787 ghcr.io/estellad/eurobioc2025ostaworkshop:latest</span></code></pre></div>
+<div class="sourceCode" id="cb5"><pre class="sourceCode sh"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" tabindex="-1"></a><span class="ex">docker</span> run <span class="at">--platform</span> linux/amd64 <span class="at">-e</span> PASSWORD=bioc <span class="at">-p</span> 8787:8787 ghcr.io/estellad/eurobioc2025ostaworkshop:latest</span></code></pre></div>
+<p>Once running, navigate to <a href="http://localhost:8787/" class="external-link uri">http://localhost:8787/</a> in your browser, and log in with username <code>rstudio</code> and password <code>bioc</code>.</p>
+</div>
+<div class="section level2">
+<h2 id="links">Links<a class="anchor" aria-label="anchor" href="#links"></a>
+</h2>
+<ul>
+<li>Workshop website: <a href="https://estellad.github.io/EuroBioC2025OSTAWorkshop" class="external-link uri">https://estellad.github.io/EuroBioC2025OSTAWorkshop</a>
+</li>
+<li>Workshop repository: <a href="https://github.com/estellad/EuroBioC2025OSTAWorkshop" class="external-link uri">https://github.com/estellad/EuroBioC2025OSTAWorkshop</a>
+</li>
+<li>OSTA book website: <a href="https://bioconductor.org/books/release/OSTA/" class="external-link uri">https://bioconductor.org/books/release/OSTA/</a>
+</li>
+<li>OSTA book preprint: <a href="https://www.biorxiv.org/content/10.1101/2025.11.20.688607v1" class="external-link uri">https://www.biorxiv.org/content/10.1101/2025.11.20.688607v1</a>
+</li>
+<li>OSTA repository: <a href="https://github.com/lmweber/OSTA" class="external-link uri">https://github.com/lmweber/OSTA</a>
+</li>
+</ul>
+</div>
+<div class="section level2">
+<h2 id="acknowledgments">Acknowledgments<a class="anchor" aria-label="anchor" href="#acknowledgments"></a>
+</h2>
+<ul>
+<li><p>OSTA book <a href="https://lmweber.org/OSTA/pages/apx-acknowledgments.html" class="external-link">contributors</a></p></li>
+<li><p>10x Genomics <a href="https://www.10xgenomics.com/datasets/visium-hd-cytassist-gene-expression-libraries-of-human-crc-v4" class="external-link">public data download</a></p></li>
+</ul>
 </div>
 </div>
 <div class="footnotes footnotes-end-of-document">
@@ -155,7 +212,7 @@
 
 <div class="pkgdown">
   <p></p>
-<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.1.3.</p>
+<p>Site built with <a href="https://pkgdown.r-lib.org/" class="external-link">pkgdown</a> 2.2.0.</p>
 </div>
 
       </footer>
