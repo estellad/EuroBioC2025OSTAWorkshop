@@ -31,19 +31,19 @@ Last modified: 15 September, 2025.
 -   Yixing Estella Dong ([estella.yixing.dong\@gmail.com](mailto:estella.yixing.dong@gmail.com){.email})
 -   Ellis Patrick ([ellis.patrick\@sydney.edu.au](mailto:ellis.patrick@sydney.edu.au){.email})
 
-## Workshop Description
+## Workshop description
 In this instructor-led live demo, we analyze Visium HD data segmented into cells, demonstrating the use of the `SpatialFeatureExperiment` class in R to import, visualize, perform quality control, transfer labels from a single-cell reference to annotate the data, identify spatial domains, and select marker genes. Spatial transcriptomics (ST) data with annotated cell types can reveal key disease characteristics through neighborhood enrichment and spatial statistics, which will be demonstrated in the second half of the workshop. The complete analysis provided by existing tools highlights how easily researchers can transform raw counts from a Visium HD experiment into biological insights using Bioconductor and CRAN. Additional ST workflows are available at <https://lmweber.org/OSTA/>.
 
 ### Pre-requisites
 
--   Basic knowledge of spatial transcriptomics
--   Basic knowledge of R syntax
+-   Intermediate knowledge of spatial transcriptomics
+-   Intermediate knowledge of R syntax
 -   Familiarity with `SpatialExperiment` classes and object manipulation
 -   Familiarity with spatial `sf` classes and object manipulation
 
 Additional reading:
 
--   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
+-   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing-data.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
 
 
 ### Dataset
@@ -365,11 +365,11 @@ down_sample <- unlist(lapply(cells_by_type, \(.) sample(., min(length(.), 1000))
 
 ### RCTD - Robust decomposition of cell type mixtures in spatial transcriptomics
 
-There are many ways to transfer labels from single-cell data to spatial data. We use `r BiocStyle::Biocpkg("RCTD")` because it performs competitively in public benchmarks, models mixed signals explicitly, and assigns each spatial unit a clear class as a singlet or as one of several doublet types. RCTD was originally designed for spot-based platforms such as 10x Visium, where each spot captures RNA from multiple cells. It treats the observed counts in a spot as a mixture of reference cell-type expression profiles and uses a likelihood model to estimate non-negative weights for each candidate cell type. It then compares a singlet model against a doublet model to determine whether one cell type is sufficient to explain the counts or whether two are required. The method also learns scale factors to account for platform differences and total RNA content, which helps it transfer labels across technologies.
+There are many ways to transfer labels from single-cell data to spatial data. We use `r BiocStyle::Biocpkg("spacexr")` (i.e. `RCTD`) because it performs competitively in public benchmarks, models mixed signals explicitly, and assigns each spatial unit a clear class as a singlet or as one of several doublet types. `RCTD` was originally designed for spot-based platforms such as 10x Visium, where each spot captures RNA from multiple cells. It treats the observed counts in a spot as a mixture of reference cell-type expression profiles and uses a likelihood model to estimate non-negative weights for each candidate cell type. It then compares a singlet model against a doublet model to determine whether one cell type is sufficient to explain the counts or whether two are required. The method also learns scale factors to account for platform differences and total RNA content, which helps it transfer labels across technologies.
 
-In our setting we apply RCTD at cellular resolution using segmented Visium HD data. Although each unit is intended to represent a single cell, there are still cases where the measured counts reflect more than one cell type. This can arise from partial volume effects at cell boundaries, segmentation errors, tightly packed regions, or local diffusion of transcripts. Running RCTD in doublet mode remains useful here because it can flag these cases and provide a principled estimate of the most likely composition. In practice we expect most units to be classified as singlets, with a minority of doublets that warrant closer inspection or additional filtering.
+In our setting we apply `RCTD` at cellular resolution using segmented Visium HD data. Although each unit is intended to represent a single cell, there are still cases where the measured counts reflect more than one cell type. This can arise from partial volume effects at cell boundaries, segmentation errors, tightly packed regions, or local diffusion of transcripts. Running `RCTD` in doublet mode remains useful here because it can flag these cases and provide a principled estimate of the most likely composition. In practice we expect most units to be classified as singlets, with a minority of doublets that warrant closer inspection or additional filtering.
 
-Unfortunately running RCTD is slow, so we will load a precompiled version.
+Unfortunately running `RCTD` is slow, so we will load a precompiled version.
 
 ```{r rctd-preload-level1}
 # data("rctd_result_level1.RData", package = "EuroBioC2025_OSTA_Workshop")
@@ -390,7 +390,7 @@ load(here::here("data/rctd_result_level1.RData"))
 # # save(rctd_result_level1, file = here::here("data/rctd_result_level1.RData"))
 ```
 
-Note: RCTD does have some internal QC, so lets check if anything was filtered out prior to running deconvolution.
+Note: `RCTD` does have some internal QC, so lets check if anything was filtered out prior to running deconvolution.
 
 ```{r rctd-qc-dims}
 dim(vhdsub)
@@ -586,14 +586,8 @@ We can visualise these relationships using `imageCrossPlot()`. It visualises enr
 imageCrossPlot(crossK, limits = c(-400,400))
 ```
 
-We can visualise the spatial arrangement of our annotated cells to build intuition for these statistics. This helps confirm that any strong pairwise signals are visible in the image and not driven by a handful of cells.
+We can re-visit the spatial composition of cell types, annotated by RCTD above, to build intuition for these statistics. This helps confirm that any strong pairwise signals are visible in the image and not driven by a handful of cells.
 
-```{r ann-spatial-scatter, fig.height=4, fig.width=6}
-vhdsub |> 
-  ggplot(aes(pxl_col_in_fullres, pxl_row_in_fullres, colour = cellType)) + 
-  geom_point(size=0.5) + scale_color_brewer(palette = "Set1") + theme_classic() + 
-  enlarge_legend_dot
-```
 
 ### Localisation in context
 
@@ -671,6 +665,18 @@ ggplot(data = filter(df, cellType %in% c("Tumor", "Myeloid")),
   
 ```
 
+```{r ktx-spatial-highlight, fig.height=4, fig.width=5.5, warning=FALSE, message=FALSE}
+ct_interest <- c("Myeloid", "Tumor")
+vhdsub$myetu <- ifelse(!(vhdsub$cellType %in% ct_interest), NA, vhdsub$cellType)
+vhdsub$myetu <- factor(vhdsub$myetu, levels = ct_interest)
+plotSpatialFeature(vhdsub, features = "myetu", 
+                   colGeometryName = "updatecellSeg") + 
+  scale_fill_manual(name   = "cellType",
+                    values = c("Myeloid" = "#f58231", "Tumor" = "#bfef45"),
+                    na.value = "grey90") + 
+  thin_discrete_legend
+```
+
 ## Identifying expression changes associated with cell localisation
 
 Spatial proximity tells us where different cell types are relative to one another, but an equally important question is what happens to those cells when they are in close contact. Proximity alone does not guarantee functional interaction. To uncover biological relevance, we need to test whether changes in the microenvironment are associated with measurable shifts in gene expression within a given cell type.
@@ -737,7 +743,7 @@ sce[, down_sample] |>
   join_features(features = "CEACAM6", shape = "wide") |>
   ggplot(aes(x = Level1, y = CEACAM6, fill = Level1)) + 
   stat_summary(fun = mean, geom = "bar") + 
-  scale_fill_brewer(palette = "Set1") + 
+  scale_fill_manual(values = unname(pals::trubetskoy())) + 
   theme_bw() + 
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   thin_discrete_legend
