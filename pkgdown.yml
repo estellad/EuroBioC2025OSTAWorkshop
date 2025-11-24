@@ -3,7 +3,7 @@ pkgdown: 2.2.0
 pkgdown_sha: ~
 articles:
   seq-workflow-visium-hd-cell: seq-workflow-visium-hd-cell.html
-last_built: 2025-11-24T13:48Z
+last_built: 2025-11-24T15:14Z
 urls:
   reference: https://estellad.github.io/EuroBioC2025_OSTA_Workshop/reference
   article: https://estellad.github.io/EuroBioC2025_OSTA_Workshop/articles
