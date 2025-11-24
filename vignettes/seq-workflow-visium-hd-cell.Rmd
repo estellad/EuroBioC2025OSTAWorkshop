@@ -1,6 +1,8 @@
 ---
 title: "EuroBioC2025 OSTA Workshop"
 output: rmarkdown::html_vignette
+bibliography: references.bib
+link-citations: true
 vignette: >
   %\VignetteIndexEntry{EuroBioC2025 OSTA Workshop}
   %\VignetteEngine{knitr::rmarkdown}
@@ -28,7 +30,7 @@ Last modified: 24 November, 2025.
 
 ## Preparation
 ### Dataset
-The relevant data by Oliveira et al. (2024) are stored on Open Science Framework, and can be downloaded as delayed format cached on your laptop through `r BiocStyle::Biocpkg("OSTA.data")`:
+The relevant data by @oliveira2025high are stored on Open Science Framework, and can be downloaded as delayed format cached on your laptop through `r BiocStyle::Biocpkg("OSTA.data")`:
 
 ```{r load-data-test, message=FALSE}
 library(OSTA.data)
