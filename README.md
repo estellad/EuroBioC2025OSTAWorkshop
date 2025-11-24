@@ -1,24 +1,30 @@
 # Workflow: Visium HD cell-level
 
-<img src="inst/www/01_Bioc.png" width="25%" align="left"/> <img src="inst/www/02_OSTA.png" width="25%" align="left"/> <img src="inst/www/03_OSTA.data.png" width="25%" align="left"/>
+<p align="left">
 
-Authors: Yixing E. Dong[^readme-1], Ellis Patrick[^readme-2].
+<img src="inst/www/01_Bioc.png" width="15%" style="margin-right:20px;"/> <img src="inst/www/02_OSTA.png" width="15%" style="margin-right:20px;"/> <img src="inst/www/03_OSTA.data.png" width="15%"/>
+
+</p>
+
+## Instructor name and contact information
+
+-   Estella Yixing Dong[^readme-1] ([estella.yixing.dong\@gmail.com](mailto:estella.yixing.dong@gmail.com){.email})
+-   Ellis Patrick[^readme-2] ([ellis.patrick\@sydney.edu.au](mailto:ellis.patrick@sydney.edu.au){.email})
 
 [^readme-1]: University of Lausanne, Lausanne, Switzerland
 
 [^readme-2]: University of Sydney, Sydney, Australia
 
-## Instructor name and contact information
-
--   Yixing Estella Dong ([estella.yixing.dong\@gmail.com](mailto:estella.yixing.dong@gmail.com){.email})
--   Ellis Patrick ([ellis.patrick\@sydney.edu.au](mailto:ellis.patrick@sydney.edu.au){.email})
-
-### Pre-requisites
+## Pre-requisites
 
 -   Intermediate knowledge of spatial transcriptomics
 -   Intermediate knowledge of R syntax
 -   Familiarity with `SpatialExperiment` classes and object manipulation
 -   Familiarity with spatial `sf` classes and object manipulation
+
+### Additional reading:
+
+-   Please have a read of [Visium HD file structure](https://lmweber.org/OSTA/pages/bkg-importing-data.html) and [bin-wise Visium HD analysis](https://lmweber.org/OSTA/pages/seq-workflow-visium-hd.html) in the OSTA book.
 
 ## Workshop description
 
