@@ -20,16 +20,18 @@ knitr::opts_chunk$set(
 
 # Workflow: Visium HD cell-level
 
-Authors: Yixing E. Dong[^1], Ellis Patrick[^2].  
-
-Last modified: 24 November, 2025.
+Authors: Yixing E. Dong[^1], Ellis Patrick[^2].
 
 [^1]: University of Lausanne, Lausanne, Switzerland
 
 [^2]: University of Sydney, Sydney, Australia
 
+Last modified: 24 November, 2025.
+
 ## Preparation
+
 ### Dataset
+
 The relevant data by @oliveira2025high are stored on Open Science Framework, and can be downloaded as delayed format cached on your laptop through `r BiocStyle::Biocpkg("OSTA.data")`:
 
 ```{r load-data-test, message=FALSE}
@@ -47,7 +49,7 @@ We prepared a reader for Visium HD segmented output at `./vignettes/utils.R`.
 
 Bioconductor: Biobase, BiocStyle, Banksy, CARDspa, DropletUtils, GenomeInfoDb, ggspavis, OSTA.data, S4Vectors, scater, scran, scuttle, SingleCellExperiment, spacexr, SpatialExperiment, SpatialFeatureExperiment, spicyR, SpotSweeper, Statial, Voyager
 
-CRAN:         dplyr, ggplot2, grDevices, grid, here, igraph, magick, pals, patchwork, pheatmap, plotly, rlang, sf, tidyr, tidySpatialExperiment, tidyverse
+CRAN: dplyr, ggplot2, grDevices, grid, here, igraph, magick, pals, patchwork, pheatmap, plotly, rlang, sf, tidyr, tidySpatialExperiment, tidyverse
 
 ## Workshop goals and objectives
 
@@ -90,16 +92,21 @@ As of June 2025, Visium HD enables direct output of H&E-segmented cell-level dat
 ### Dependencies {#sec-seq-workflow-visium-hd-cell-load-data}
 
 ```{r deps, message=FALSE, warning=FALSE}
+library(AUCell)
 library(Banksy)
 library(CARDspa)
 library(dplyr)
 library(DropletUtils)
+library(ggfortify)
 library(ggplot2)
+library(ggpubr)
+library(ggrepel)
 library(grDevices)
 library(grid)
 library(here)
 library(igraph)
 library(magick)
+library(msigdbr)
 library(OSTA.data)
 library(patchwork)
 library(pheatmap)
@@ -111,19 +118,23 @@ library(scran)
 library(scuttle)
 library(sf)
 library(SingleCellExperiment)
+library(sosta)
 library(spacexr)
 library(SpatialExperiment)
+library(spatialFDA)
 library(SpatialFeatureExperiment)
+library(spatstat)
 library(spicyR)
 library(SpotSweeper)
 library(Statial)
+library(stats)
 library(tidyr)
 library(tidySpatialExperiment)
 library(tidyverse)
 library(Voyager)
 ```
 
-We source the reader in `utils.R` and specify alias for plotting themes. 
+We source the reader in `utils.R` and specify alias for plotting themes.
 
 ```{r prep}
 source(here::here("vignettes/utils.R"))
@@ -148,7 +159,7 @@ common_args_heatmap <- list(cellwidth=10, cellheight=10,
 
 ### Load spatial data
 
-Output files from SpaceRanger v4 are listed in `/segmented_outputs` folder, with the expected structure detailed in the Background - Importing data chapter of the OSTA book. 
+Output files from SpaceRanger v4 are listed in `/segmented_outputs` folder, with the expected structure detailed in the Background - Importing data chapter of the OSTA book.
 
 ```{r osta_download}
 id <- "VisiumHD_HumanColon_Oliveira"
@@ -166,7 +177,7 @@ vhdsfe <- readVisiumHDCellSeg(td, res = "hires")
 vhdsfe
 ```
 
-To keep runtime low, our downstream analysis will be performed on a subset area of 16 µm bins (1/64 of the data coverage area). We restrict to the same region from as we have done in the OSTA book. 
+To keep runtime low, our downstream analysis will be performed on a subset area of 16 µm bins (1/64 of the data coverage area). We restrict to the same region from as we have done in the OSTA book.
 
 ```{r subset-polygons, message=FALSE, warning=FALSE}
 vhdsub <- subsetVisiumHD(vhdsfe,
@@ -183,19 +194,6 @@ ncol(vhdsfe)/ncol(vhdsub)
 Show subset region used for analysis:
 
 ```{r plt-subset-cov-box, fig.width=6, fig.height=4, message=FALSE}
-getBoxRange <- function(obj){
-  data <- spatialCoords(obj) %>% as.data.frame() %>% 
-    summarise(xmin = min(pxl_col_in_fullres), xmax = max(pxl_col_in_fullres),
-              ymin = min(pxl_row_in_fullres), ymax = max(pxl_row_in_fullres))
-  return(data)
-}
-
-plotBox <- function(data, col, lty, lwd){
-  geom_rect(data = data,
-            aes(xmin = xmin, xmax = xmax, ymin = ymin, ymax = ymax), 
-            color = col, fill = NA, linetype = lty, linewidth = lwd)
-}
-
 plotImage(vhdsfe) + 
   plotBox(getBoxRange(vhdsfe), col = "#3b3b3b", lty = 2, lwd = 1/2) +
   plotBox(getBoxRange(vhdsub), col = "black", lty = 4, lwd = 2/3) +
@@ -407,6 +405,7 @@ table(vhdsub$cellType)
 ```
 
 We can visualize the spatial location of singlets, doublets, or the assigned cell types by `RCTD`.
+
 ```{r rctd-result-discrete, fig.width=8, fig.height=3, message=FALSE}
 p0 <- plotSpatialFeature(vhdsub, features = "cellTypeClass", 
                    colGeometryName = "updatecellSeg") + 
@@ -418,14 +417,15 @@ p1 <- plotSpatialFeature(vhdsub, features = "cellType",
 (p0 | p1) & thin_discrete_legend
 ```
 
-Previously, we found one cell was flagged as a local outlier by `SpotSweeper`, and now we can check its property. 
+Previously, we found one cell was flagged as a local outlier by `SpotSweeper`, and now we can check its property.
+
 ```{r rctd-agree-spotsweeper}
 table(vhdsub$subsets_mt_percent_outliers == TRUE)
 vhdsub$cellType[vhdsub$subsets_mt_percent_outliers == TRUE]
 vhdsub$cellTypeClass[vhdsub$subsets_mt_percent_outliers == TRUE]
 ```
 
-Filter out low quality cells from the `SpatialFeatureExperiment` object, prior to spatial clustering. 
+Filter out low quality cells from the `SpatialFeatureExperiment` object, prior to spatial clustering.
 
 ```{r qc-filtering, message=FALSE, warning=FALSE}
 vhdsub <- vhdsub[, !vhdsub$discard]
@@ -470,7 +470,7 @@ table(vhdsub$Banksy)
 
 Now we can visualize clustering result spatially.
 
-```{r clus-spa-umap, fig.width=4, fig.height=3, warning=FALSE, message=FALSE}
+```{r clus-spa-umap, fig.width=3.5, fig.height=3, warning=FALSE, message=FALSE}
 plotSpatialFeature(vhdsub, features = "Banksy", 
                    colGeometryName = "updatecellSeg") +
   scale_fill_manual(values = unname(pals::kelly())) + 
@@ -517,7 +517,6 @@ p2 <- plotSpatialFeature(vhdsub, features = "DES",
   scale_fill_gradientn(colors = rev(hcl.colors(9, "Rocket")))
 
 ```
-
 ## Concordance of deconvolution & clustering
 
 We can visualize the results spatially:
@@ -536,7 +535,6 @@ p1 <- plotSpatialFeature(vhdsub, features = "Banksy",
 p0 + p1 +
   plot_layout(nrow=1) &
   center_title & thin_discrete_legend
-
 ```
 
 We observe that `Banksy` delineates tissue borders very well, while `RCTD` provides direct biological insight into the underlying clusters. Their concordance can be visualized using a heatmap:
@@ -547,16 +545,128 @@ fq <- prop.table(table(vhdsub$Banksy, vhdsub$cellType), 1)
 exec(pheatmap, fq, !!!common_args_heatmap)
 ```
 
-## Spatial statistics 
+## Feature-set signatures
+```{r featset}
+# retrieve & simplify hallmark gene sets from 'MSigDB'
+db <- msigdbr(species="Homo sapiens", collection="H")
+gs <- split(db$ensembl_gene, db$gs_name)
+names(gs) <- tolower(gsub("HALLMARK_", "", names(gs)))
+```
 
-What makes spatial transcriptomics more powerful than scRNA-seq is its linkage to spatial statistics. Visium HD cell level data can be modeled as a point pattern process
+```{r featset-gene-ranking}
+# realize (sparse) gene expression matrix
+mtx <- as(logcounts(vhdsub), "dgCMatrix") 
+# use ensembl identifiers as rownames
+rownames(mtx) <- rowData(vhdsub)$ID
+# filter for genes represented in panel
+.gs <- lapply(gs, intersect, rownames(mtx))
+# keep only those with at least 5 genes
+.gs <- .gs[sapply(.gs, length) >= 5]
+# build per-cell gene rankings
+rnk <- AUCell_buildRankings(mtx, plotStats=FALSE, verbose=FALSE)
+# calculate AUC for each gene set in each cell
+auc <- AUCell_calcAUC(geneSets=.gs, rankings=rnk, verbose=FALSE)
+```
 
-### Ripley's K
+A heatmap can be used to check which signatures are highly expressed in which cell types. To diversify the visualization, here we summarize the top 2 signatures per cell type, and display their scaled average enrichment score in a water fall plot. 
+```{r sigbarplot, fig.width=7, fig.height=4.1}
+# aggregate AUC values by cellType
+mu <- aggregateAcrossCells(auc, ids=vhdsub$cellType,
+                           use.assay.type="AUC", statistics="mean")
+mu_row_scaled <- rowScale(mu)
+top_mu <- getTopSigDF(mu_row_scaled, top_n = 2)
+
+plotDivergentBar(top_mu)
+```
+
+p53 is a common pathway related to tumor cell growth. 
+```{r p53-spatial, fig.width=3.8, fig.height=3, message=FALSE}
+# add results as cell metadata
+colData(vhdsub)[rownames(auc)] <- t(assay(auc)) 
+plotSpatialFeature(vhdsub, feature = "p53_pathway",
+                   colGeometryName = "updatecellSeg") + gradient_theme +
+  ggtitle("p53 Pathway")
+```
+
+## Shape statistics
+Here we use the shape metrics from @gunz2025analysis. 
+```{r shape-metrics}
+# get cell segmentations
+cellpo <- colGeometry(vhdsub, "updatecellSeg")
+cellpo$cellType <- vhdsub$cellType
+# get shape metrics
+shme <- totalShapeMetrics(cellpo)
+shme[1:3, 1:3]
+```
+
+Here we can see the relationship between shape metrics in the first two principal components (PCs):
+```{r shme-pca-loading, fig.width=6,fig.height=4.2, message=FALSE,warning=FALSE}
+tshme <- t(shme) |> as.data.frame() 
+autoplot(
+  prcomp(tshme, scale. = TRUE),
+  data = cellpo,
+  color = "cellType",
+  size = 0.8, alpha = 0.8, 
+  loadings.colour = "blue",
+  loadings.label = TRUE,
+  loadings.label.size = 5, 
+  loadings.label.colour = "black") +
+  scale_color_manual(values=unname(pals::trubetskoy())) +
+  theme_classic() + enlarge_legend_dot
+
+```
+
+The angle between two shape metrics explains the degree of similarity, and the length of the loading shows the strength of one metric. The first PC explains 41% or variability in the shape statistics and the second PC captures 36% variability. 
+
+For example, `fibreLength` and `Compactness` are almost perpendicular to each other, so we see a negative correlation between them in a scatter plot. We can also color the points by the log gene expression of *PIGR*, a common marker in Epithelial, as shown before. Most of high *PIGR* cells show longer `fibreLength`, with no obvious sign on compactness. 
+```{r shape-cor, fig.width=4.5, fig.height=4}
+tshme$logPIGR <- logcounts(vhdsub)["PIGR", ]
+ggplot(tshme, aes(x = fibreLength, y = Compactness)) + 
+  geom_point(aes(color = logPIGR), alpha = 0.8) + 
+  scale_color_viridis_c(option = "rocket", direction = -1) + 
+  geom_density2d() + 
+  geom_smooth(method='loess', formula= y~x) + 
+  stat_cor(method = "pearson", label.x.npc = "center", label.y.npc = "top") +
+  theme_classic() + gradient_theme + ggtitle("PIGR")
+  
+```
+
+Next, we can summarize the shape statistics per cell type. We check the differences in `fibreLength` and `Compactness` across cell types. 
+```{r shape-violin, fig.width=7.2, fig.height=4.5}
+tshme |>
+  cbind(cellType = vhdsub$cellType) |> 
+  pivot_longer(cols = -cellType, names_to = "metrics", values_to = "val") |> 
+  filter(metrics %in% c("Compactness", "fibreLength")) |>
+  ggplot(aes(x = cellType, y = val, fill = cellType)) +
+  geom_violin() +
+  geom_boxplot(aes(fill = NULL), width = 0.3) +
+  facet_wrap(~metrics, scales = "free") +
+  scale_fill_manual(values = unname(pals::trubetskoy())) +
+  theme_classic() + 
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  guides(fill = "none")
+```
+We observer more uniform distribution in `Compactness`, while more variability in `fibreLength` across cell types. 
+
+
+We can also view these shape metrics spatially:
+```{r fiblen-spatial, fig.width=3.8, fig.height=3, message=FALSE}
+colData(vhdsub)[names(tshme)] <- tshme
+
+plotSpatialFeature(vhdsub, features = "fibreLength",
+                   colGeometryName = "updatecellSeg") + 
+  scale_fill_gradientn(colors = c("#3B3EA8", "#278EC8", "orange", "yellow")) +
+  gradient_theme + ggtitle("fibreLength")
+```
+
+For example, immune cells have shorter `fibreLength` compared to tumor and stromal cells, which is also shown in the boxplot above. 
 
 
 ## Interrogating the spatial arrangement of our cells.
 
-### Localisation
+What makes spatial transcriptomics more powerful than scRNA-seq is its linkage to spatial statistics. There are two types of measure for spatial association, global and local. 
+
+### Global spatial association
 
 We next quantify spatial proximity between annotated cell types. The `getPairwise()` function from the `r BiocStyle::Biocpkg("spicyR")` package computes the K-cross function across all pairs of classes, summarizing whether cell type A tends to appear within distance `r` of cell type B more often than expected under spatial randomness. Here we use a radius of 200 units (\~50 microns) to capture immediate neighborhood effects at approximately one to two cell diameters.
 
@@ -571,12 +681,57 @@ crossK = getPairwise(vhdsub,
 
 We can visualize these relationships using `imageCrossPlot()`. It visualizes enrichment and avoidance across all pairs, which is handy for scanning for strong interactions before diving deeper. To aid interpretation, follow the sign: values above zero indicate spatial attraction at radius `r` (more co-occurrence than expected), while values below zero indicate spatial repulsion.
 
-```{r spicy-pairwise-plot, fig.height=4, fig.width=6}
-imageCrossPlot(crossK, limits = c(-400,400))
+```{r spicy-pairwise-plot, fig.height=4, fig.width=5}
+imageCrossPlot(crossK, limits = c(-400,400)) + gradient_theme +
+  ggtitle("Spatial association") + 
+  theme(axis.line = element_blank(), axis.ticks = element_blank())
 ```
 
 We can re-visit the spatial composition of cell types, annotated by `RCTD` above, to build intuition for these statistics. This helps confirm that any strong pairwise signals are visible in the image and not driven by a handful of cells.
 
+### Local indicator of spatial association - LISA
+Different that the previous global measure, initially proposed by @anselin1995local, LISA is a measure. 
+Visium HD cell level data can be modeled as a point pattern process, as detailed in @emons2025harnessing.  First, we construct the plotting data frame that contains local indicator spatial association.
+```{r lisapltdf, message=FALSE, warning=FALSE}
+df <- .speToDf(vhdsub)
+pp <- .dfToppp(df, marks="cellType")
+
+# subset to only Tumor cells 
+ppSub <- subset(pp, marks %in% "Tumor")
+
+# calculate LISA K curves
+resLocal <- localK(ppSub, verbose=FALSE) 
+
+# code adapted from 
+# https://robinsonlabuzh.github.io/pasta/01-imaging-univar-ppSOD.html
+df <- resLocal |>
+  as.data.frame() |>
+  pivot_longer(cols = starts_with("iso"), names_to="curve") 
+
+sel <- df |>
+  filter(r > 700.5630 & r < 702.4388) |>
+  mutate(sel=value) |> 
+  select(curve, sel)
+
+plt_df <- left_join(df, sel)
+head(plt_df)
+```
+
+Plot the local indicator score for each tumor cell as a functional curve. 
+```{r lisa-plot, fig.height=4, fig.width=4.5, warning=FALSE, message=FALSE}
+ggplot(plt_df, aes(r, value, group=curve, col=sel)) +
+  geom_line() +
+  geom_line(aes(y=theo), linetype=2, col="darkgray") +
+  geom_vline(xintercept=700) +
+  scale_color_viridis_c(option = "mako") + 
+  xlab("Radius (r)") + 
+  scale_y_continuous(breaks = c(0, 2e6, 4e6), labels = c("0", "2", "4"),
+                     name = bquote("Relationship value x"~10^6)) +
+  theme_classic() + 
+  theme(legend.position="none", 
+        axis.title = element_text(size=14),
+        panel.grid.major = element_line(colour = "grey90", linetype = 2)) 
+```
 
 ### Localisation in context
 
@@ -589,7 +744,6 @@ This is where `Kontextual` from the `r BiocStyle::Biocpkg("Statial")` package co
 For this demonstration, we define an immune context composed of T cells, Myeloid cells, and B cells. `Kontextual` then evaluates whether, within this immune backdrop, specific pairs (for example, Myeloid–Tumor) show evidence of additional attraction or repulsion at a chosen spatial scale. The method is flexible: you can define any grouping of interest as a “parent” or context, and then interrogate the conditional relationships of one population relative to that context.
 
 ```{r ktx-run}
-
 ## Create a vector saying which cells are in the immune context
 immune <- c("T_cells", "Myeloid", "B_cells")
 
@@ -624,32 +778,39 @@ ggplotly(plotKontext)
 
 We can then inspect radii-dependent curves (for example Myeloid around Tumor) to confirm at which scales the effect appears, which is often informative for processes like invasion fronts or peritumoral niches.
 
-```{r ktx-scale-curve, fig.height=4, fig.width=6, warning=FALSE, message=FALSE}
+```{r ktx-scale-curve, fig.height=4.6, fig.width=4.5, warning=FALSE, message=FALSE}
 curves <- kontextCurve(
-  cells = vhdsub,
-  from = "Tumor",
-  to = "Myeloid",
-  parent = immune,
-  rs = seq(20, 500, 50),
-  image = "sample01",
-  cellType = "cellType",
-  imageID = "sample_id"
+  cells = vhdsub, rs = seq(20, 500, 50), 
+  from = "Tumor", to = "Myeloid", parent = immune, se = TRUE,
+  image = "sample01", cellType = "cellType", imageID = "sample_id"
 )
 
-kontextPlot(curves) + theme_bw()
+p <- kontextPlot(curves) + theme_classic() + 
+  scale_color_manual(labels = c("Kontextual", "L-Function"), 
+                     values = c("#00BE70", "darkblue")) + 
+  scale_fill_manual(values = c("lightgreen", "lightblue")) + 
+  theme(panel.grid.major = element_line(colour = "grey90", linetype = 2),
+        legend.position = "top", 
+        legend.text = element_text(size = 13), 
+        axis.title = element_text(size = 14)) 
+p@layers$geom_hline$aes_params$colour <- "black" # update dashed line color
+p$layers[["geom_ribbon"]]$show.legend <- FALSE   # remove geom ribbon box
+p
+
 ```
 
 To aid interpretation, we can also re-plot the spatial map with the immune context grayed and the two focal types colored. This quickly links our statistical findings to a tangible patterns in the tissue.
 
-```{r ktx-spatial-highlight, fig.height=4, fig.width=5.5, warning=FALSE, message=FALSE}
+```{r ktx-spatial-highlight, fig.height=3, fig.width=4, message=FALSE}
 ct_interest <- c("Myeloid", "Tumor")
-vhdsub$myetu <- ifelse(!(vhdsub$cellType %in% ct_interest), NA, vhdsub$cellType)
-vhdsub$myetu <- factor(vhdsub$myetu, levels = ct_interest)
+vhdsub$myetu <- ifelse(!(vhdsub$cellType %in% ct_interest), 
+                       "Other", vhdsub$cellType)
+vhdsub$myetu <- factor(vhdsub$myetu, levels = c(ct_interest, "Other"))
 plotSpatialFeature(vhdsub, features = "myetu", 
                    colGeometryName = "updatecellSeg") + 
   scale_fill_manual(name   = "cellType",
-                    values = c("Myeloid" = "#f58231", "Tumor" = "#bfef45"),
-                    na.value = "grey90") + 
+                    values = c("Myeloid" = "#f58231", "Tumor" = "#bfef45",
+                               "Other" = "grey90")) + 
   thin_discrete_legend
 ```
 
@@ -668,6 +829,7 @@ This is the motivation behind `spatioMark`, part of the `Statial` package. The i
 In practice, `spatioMark` first computes local abundances of each cell type around every cell, giving each cell a numerical “neighborhood profile.” These covariates then feed into a gene-wise regression model. For each gene expressed in the target population, `spatioMark` fits a generalized linear model. As we have count data in this case, we leverage functionality in the `edgeR` package to model the data as negative binomial. The coefficients tell us whether gene expression increases or decreases as the abundance of a chosen neighbor rises.
 
 ### Abundance
+
 First, we need to quantify the abundance of each cell type around each cell.
 
 ```{r smark-abundances}
@@ -695,7 +857,7 @@ stateChanges |> head(20)
 
 The previous output is a ranked list of genes, highlighting markers that change as Myeloid cells are near tumor cells. One of the top genes on this list is *SPP1* which is known to be expressed in tumor-associated macrophages. We can visualize this relationship using the `plotStateChanges()` function.
 
-```{r smark-plot-spp1, warning=FALSE, message=FALSE, fig.height=4, fig.width=7}
+```{r smark-plot-spp1, warning=FALSE, message=FALSE, fig.height=4,fig.width=4.7}
 p <- plotStateChanges(
   cells = vhdsub,
   image = "sample01",
@@ -710,20 +872,26 @@ p <- plotStateChanges(
   method = "lm"
 )
 
-p[[1]]
+p[[1]] + theme_void() + 
+  theme(legend.key.width = grid::unit(0.5, "lines"), 
+        legend.key.height = grid::unit(1, "lines")) + facet_null() + 
+ggtitle("Cell Points: Myeloid, Cell Density: Tumor") + center_title 
 ```
 
 ### Contamination
+
 However, there are some genes that not expressed in Macrophages such as *CEACAM6* which are likely lateral spillover or diffusion.
 
-```{r smark-ceacam6-check, fig.height=4, fig.width=6}
+```{r smark-ceacam6-check, fig.height=4, fig.width=3.5}
 sce[, down_sample] |>
   join_features(features = "CEACAM6", shape = "wide") |>
-  ggplot(aes(x = Level1, y = CEACAM6, fill = Level1)) + 
-  stat_summary(fun = mean, geom = "bar") + 
-  scale_fill_manual(values = unname(pals::trubetskoy())) + 
-  theme_bw() + 
-  theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
+  mutate(logCEACAM6 = log1p(CEACAM6)) |>
+  ggplot(aes(x = Level1, y = logCEACAM6, fill = Level1)) +
+  geom_boxplot() + 
+  scale_fill_manual(values = unname(pals::trubetskoy())) +
+  theme_classic() + ylab("CEACAM6 log expression") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1),
+        legend.position = "none") +
   thin_discrete_legend
 ```
 
@@ -738,7 +906,8 @@ contam <- assay(rctd_result_level1, 1) |>
 reducedDim(vhdsub, "RCTD") <- contam[match(colnames(vhdsub), rownames(contam)),]
 ```
 
-After correction, the false discovery rate of *CEACAM6* is no longer significant at a threshold of 0.05. The rank of this gene falls from 14 to 173, while other Macrophage-relevant top genes, such as *SPP1*, keep their high rankings and remain contamination-invariant. 
+After correction, the false discovery rate of *CEACAM6* is no longer significant at a threshold of 0.05. The rank of this gene falls from 14 to 173, while other Macrophage-relevant top genes, such as *SPP1*, keep their high rankings and remain contamination-invariant.
+
 ```{r smark-statechanges-contam}
 stateChangesCon <- calcStateChanges(
   cells = vhdsub,
@@ -753,7 +922,12 @@ stateChangesCon <- calcStateChanges(
 stateChangesCon |> filter(marker == "CEACAM6")
 ```
 
+Next, we can visualize the change of ranking of *CEACAM6* after decontamination, among the top 20 marker genes as Myeloid cells get near Tumor cells.
+```{r rnkplot, fig.height=4, fig.width=5.2}
+plotRankChange(target_gene = "CEACAM6", n = 20, stateChanges, stateChangesCon)
+```
 
+So far, we have analyzed one CRC sample from patient P2. In fact, @oliveira2025high includes multiple patients in this Visium HD public dataset, spanning different disease conditions (healthy vs. cancer). To apply spatial statistics to assess cell-type colocalization across multiple conditions, you can refer to the Multi-sample chapters of the OSTA book: a. [Differential spatial patterns](https://bioconductor.org/books/release/OSTA/pages/mult-diff-spatial-patterns.html), b. [Differential colocalization](https://bioconductor.org/books/release/OSTA/pages/mult-diff-colocalization.html), c. [Structure-based analysis](https://bioconductor.org/books/release/OSTA/pages/mult-structure-based.html)
 
 ## Extension
 
@@ -766,7 +940,7 @@ load(here::here("data/rctd_result_level2.RData"))
 Or you can try using a different deconvolution algorithm.
 
 ```{r CARD, eval=FALSE}
-set.seed(2025)
+set.seed(1000)
 vhd2 <- vhdsub
 colnames(spatialCoords(vhd2)) <- c("x", "y")
 sce2 <-sce[, down_sample]
