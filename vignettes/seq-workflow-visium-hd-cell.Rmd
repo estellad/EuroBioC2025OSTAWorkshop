@@ -68,8 +68,8 @@ The key steps of Visium HD data analysis are described in this workshop, along w
 -   Perform label transfer from single-cell reference data to spatial data
 -   Identify spatial domains and marker genes for each region
 -   Visualize Visium HD data as polygons or cell centroids
--   Check concordance between cell typing results and spatial domains using heatmaps
--   Perform spatial analysis of a single image
+-   Extract morphological metrics from cell polygons and make inference
+-   Perform spatial analysis in a tissue slice
 
 ### Time outline
 
@@ -81,8 +81,8 @@ The key steps of Visium HD data analysis are described in this workshop, along w
 | Data processing       | 5 mins  |
 | Quality control       | 10 mins |
 | Cell annotation       | 10 mins |
-| Domain identification | 10 mins |
-| Spatial analysis      | 30 mins |
+| Shape statistics      | 15 mins |
+| Spatial analysis      | 25 mins |
 | Conclusion            | 5 mins  |
 
 ## Introduction
@@ -93,10 +93,13 @@ As of June 2025, Visium HD enables direct output of H&E-segmented cell-level dat
 
 ```{r deps, message=FALSE, warning=FALSE}
 library(AUCell)
+library(Biobase)
+library(BiocStyle)
 library(Banksy)
 library(CARDspa)
 library(dplyr)
 library(DropletUtils)
+library(GenomeInfoDb)
 library(ggfortify)
 library(ggplot2)
 library(ggpubr)
@@ -108,6 +111,7 @@ library(igraph)
 library(magick)
 library(msigdbr)
 library(OSTA.data)
+library(pals)
 library(patchwork)
 library(pheatmap)
 library(plotly)
@@ -168,7 +172,10 @@ dir.create(td <- tempfile())
 unzip(pa, exdir=td)
 ```
 
-<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting.  -->
+<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting. 
+
+Update: As of January 2026, pull requests branched from this reader have been merged into the VisiumIO and SpatialFeatureExperiment packages, enabling Visium HD cell-segmented data to be read as SpatialExperiment and SpatialFeatureExperiment objects, respectively. 
+-->
 
 Read in Visium HD cell segmented data as a `SpatialFeatureExperiment` object.
 
@@ -546,6 +553,10 @@ exec(pheatmap, fq, !!!common_args_heatmap)
 ```
 
 ## Feature-set signatures
+Individual biomarkers identified in the DGE step may or may not have phenotypic relevance. Instead, we can quantify gene sets that are known to orchestrate biological functions or pathways, such as metabolic activity, cell cycle progression, and cell death, at the single-cell level. 
+
+MSigDB provides a programmatic interface to the [Molecular Signatures Database (MSigDB)](https://www.gsea-msigdb.org/gsea/msigdb) (@subramanian2005gene), one of the largest collections of molecular signatures and pathways. We start with retrieving the human hallmark database. 
+
 ```{r featset}
 # retrieve & simplify hallmark gene sets from 'MSigDB'
 db <- msigdbr(species="Homo sapiens", collection="H")
@@ -553,6 +564,7 @@ gs <- split(db$ensembl_gene, db$gs_name)
 names(gs) <- tolower(gsub("HALLMARK_", "", names(gs)))
 ```
 
+Next, we score these gene sets with `r BiocStyle::Biocpkg("AUCell")` (@aibar2017scenic), a rank-based approach that (i) ranks genes for every cells, and (ii) compute area under the recovery curve (AUC) values for each gene set.
 ```{r featset-gene-ranking}
 # realize (sparse) gene expression matrix
 mtx <- as(logcounts(vhdsub), "dgCMatrix") 
@@ -568,7 +580,7 @@ rnk <- AUCell_buildRankings(mtx, plotStats=FALSE, verbose=FALSE)
 auc <- AUCell_calcAUC(geneSets=.gs, rankings=rnk, verbose=FALSE)
 ```
 
-A heatmap can be used to check which signatures are highly expressed in which cell types. To diversify the visualization, here we summarize the top 2 signatures per cell type, and display their scaled average enrichment score in a water fall plot. 
+A heatmap can be used to check which signatures are highly expressed in which cell types. To diversify the visualization, here we summarize the top 2 signatures per cell type, and display their scaled average enrichment score in a waterfall plot. 
 ```{r sigbarplot, fig.width=7, fig.height=4.1}
 # aggregate AUC values by cellType
 mu <- aggregateAcrossCells(auc, ids=vhdsub$cellType,
@@ -579,7 +591,7 @@ top_mu <- getTopSigDF(mu_row_scaled, top_n = 2)
 plotDivergentBar(top_mu)
 ```
 
-p53 is a common pathway related to tumor cell growth. 
+p53 is a well-known pathway related to tumor cell growth (@vogelstein2000surfing), and its enrichment score can be visualized spatially.
 ```{r p53-spatial, fig.width=3.8, fig.height=3, message=FALSE}
 # add results as cell metadata
 colData(vhdsub)[rownames(auc)] <- t(assay(auc)) 
@@ -589,7 +601,7 @@ plotSpatialFeature(vhdsub, feature = "p53_pathway",
 ```
 
 ## Shape statistics
-Here we use the shape metrics from @gunz2025analysis. 
+Because cell segmentation polygons are available for each cell, we can derive a range of shape metrics (@gunz2025analysis).
 ```{r shape-metrics}
 # get cell segmentations
 cellpo <- colGeometry(vhdsub, "updatecellSeg")
@@ -598,8 +610,7 @@ cellpo$cellType <- vhdsub$cellType
 shme <- totalShapeMetrics(cellpo)
 shme[1:3, 1:3]
 ```
-
-Here we can see the relationship between shape metrics in the first two principal components (PCs):
+Here we can check the relationship between shape metrics in the first two principal components (PCs):
 ```{r shme-pca-loading, fig.width=6,fig.height=4.2, message=FALSE,warning=FALSE}
 tshme <- t(shme) |> as.data.frame() 
 autoplot(
@@ -616,9 +627,8 @@ autoplot(
 
 ```
 
-The angle between two shape metrics explains the degree of similarity, and the length of the loading shows the strength of one metric. The first PC explains 41% or variability in the shape statistics and the second PC captures 36% variability. 
+The first principal component (PC1) explains 42.82% of the variability in the shape statistics, and the second principal component (PC2) captures 31.66%. The angle between two shape metrics reflects their degree of similarity, while the length of a loading indicates the strength of a given metric. For example, the loadings of `fibreLength` and `Compactness` are nearly perpendicular, indicating a weak or negative correlation between them, which is consistent with their relationship in the scatter plot. We can also color the points by the log gene expression of *PIGR*, a common epithelial marker, as shown previously. Cells with high *PIGR* expression tend to exhibit longer `fibreLength`, with no obvious association with compactness.
 
-For example, `fibreLength` and `Compactness` are almost perpendicular to each other, so we see a negative correlation between them in a scatter plot. We can also color the points by the log gene expression of *PIGR*, a common marker in Epithelial, as shown before. Most of high *PIGR* cells show longer `fibreLength`, with no obvious sign on compactness. 
 ```{r shape-cor, fig.width=4.5, fig.height=4}
 tshme$logPIGR <- logcounts(vhdsub)["PIGR", ]
 ggplot(tshme, aes(x = fibreLength, y = Compactness)) + 
@@ -649,7 +659,7 @@ tshme |>
 We observer more uniform distribution in `Compactness`, while more variability in `fibreLength` across cell types. 
 
 
-We can also view these shape metrics spatially:
+We can also view these shape metrics, such as `fibreLength`, spatially:
 ```{r fiblen-spatial, fig.width=3.8, fig.height=3, message=FALSE}
 colData(vhdsub)[names(tshme)] <- tshme
 
@@ -664,7 +674,7 @@ For example, immune cells have shorter `fibreLength` compared to tumor and strom
 
 ## Interrogating the spatial arrangement of our cells.
 
-What makes spatial transcriptomics more powerful than scRNA-seq is its linkage to spatial statistics. There are two types of measure for spatial association, global and local. 
+What makes spatial transcriptomics more powerful than scRNA-seq is its integration with spatial statistics. There are two types of measures for spatial association: global and local.
 
 ### Global spatial association
 
@@ -690,8 +700,7 @@ imageCrossPlot(crossK, limits = c(-400,400)) + gradient_theme +
 We can re-visit the spatial composition of cell types, annotated by `RCTD` above, to build intuition for these statistics. This helps confirm that any strong pairwise signals are visible in the image and not driven by a handful of cells.
 
 ### Local indicator of spatial association - LISA
-Different that the previous global measure, initially proposed by @anselin1995local, LISA is a measure. 
-Visium HD cell level data can be modeled as a point pattern process, as detailed in @emons2025harnessing.  First, we construct the plotting data frame that contains local indicator spatial association.
+Visium HD cell-level data can be modeled as a point pattern process (@emons2025harnessing). Different than the previous global average measure, local indicators of spatial association (LISA) accounts for the local contribution of each cell (@anselin1995local). First, we construct the plotting data frame that contains LISA Ripley's K value for only Tumor cells.
 ```{r lisapltdf, message=FALSE, warning=FALSE}
 df <- .speToDf(vhdsub)
 pp <- .dfToppp(df, marks="cellType")
@@ -717,7 +726,7 @@ plt_df <- left_join(df, sel)
 head(plt_df)
 ```
 
-Plot the local indicator score for each tumor cell as a functional curve. 
+Plot the LISA Ripley’s K value for each tumor cell, colored by its value at a radius of 700 μm. Curves above the gray line representing complete spatial randomness (CSR) indicate highly clustered tumor cells.
 ```{r lisa-plot, fig.height=4, fig.width=4.5, warning=FALSE, message=FALSE}
 ggplot(plt_df, aes(r, value, group=curve, col=sel)) +
   geom_line() +
@@ -798,6 +807,7 @@ p$layers[["geom_ribbon"]]$show.legend <- FALSE   # remove geom ribbon box
 p
 
 ```
+Because immune cells are already densely packed, Kontextual identifies myeloid cells as being particularly close to tumor cells beyond a 50-pixel radius. In contrast, when immune context is not considered, the L-function suggests that myeloid cells and tumor cells are not spatially close.
 
 To aid interpretation, we can also re-plot the spatial map with the immune context grayed and the two focal types colored. This quickly links our statistical findings to a tangible patterns in the tissue.
 

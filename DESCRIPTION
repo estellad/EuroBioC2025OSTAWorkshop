@@ -50,7 +50,9 @@ Depends:
     sosta,
     spacexr,
     SpatialExperiment,
+    spatialFDA,
     SpatialFeatureExperiment,
+    spatstat, 
     spicyR,
     SpotSweeper,
     Statial,
@@ -68,5 +70,6 @@ BugReports: https://github.com/estellad/EuroBioC2025_OSTA_Workshop/issues/new/ch
 VignetteBuilder: knitr
 DockerImage: ghcr.io/estellad/eurobioc2025ostaworkshop:latest
 Remotes: SydneyBioX/Statial
+biocViews: Spatial, SingleCell, Transcriptomics, Software, Visualization
 LazyData: true
 LazyDataCompression: xz
