@@ -71,7 +71,7 @@
 
 
 
-      </header><link href="seq-workflow-visium-hd-cell_files/htmltools-fill-0.5.8.1/fill.css" rel="stylesheet">
+      </header><link href="seq-workflow-visium-hd-cell_files/htmltools-fill-0.5.9/fill.css" rel="stylesheet">
 <script src="seq-workflow-visium-hd-cell_files/htmlwidgets-1.6.4/htmlwidgets.js"></script><script src="seq-workflow-visium-hd-cell_files/plotly-binding-4.11.0/plotly.js"></script><script src="seq-workflow-visium-hd-cell_files/typedarray-0.1/typedarray.min.js"></script><link href="seq-workflow-visium-hd-cell_files/crosstalk-1.2.2/css/crosstalk.min.css" rel="stylesheet">
 <script src="seq-workflow-visium-hd-cell_files/crosstalk-1.2.2/js/crosstalk.min.js"></script><link href="seq-workflow-visium-hd-cell_files/plotly-htmlwidgets-css-2.11.1/plotly-htmlwidgets.css" rel="stylesheet">
 <script src="seq-workflow-visium-hd-cell_files/plotly-main-2.11.1/plotly-latest.min.js"></script><div class="row">
@@ -157,9 +157,9 @@ packages</li>
 data</li>
 <li>Identify spatial domains and marker genes for each region</li>
 <li>Visualize Visium HD data as polygons or cell centroids</li>
-<li>Check concordance between cell typing results and spatial domains
-using heatmaps</li>
-<li>Perform spatial analysis of a single image</li>
+<li>Extract morphological metrics from cell polygons and make
+inference</li>
+<li>Perform spatial analysis in a tissue slice</li>
 </ul>
 </div>
 <div class="section level4">
@@ -196,12 +196,12 @@ using heatmaps</li>
 <td>10 mins</td>
 </tr>
 <tr class="odd">
-<td>Domain identification</td>
-<td>10 mins</td>
+<td>Shape statistics</td>
+<td>15 mins</td>
 </tr>
 <tr class="even">
 <td>Spatial analysis</td>
-<td>30 mins</td>
+<td>25 mins</td>
 </tr>
 <tr class="odd">
 <td>Conclusion</td>
@@ -229,17 +229,26 @@ platforms - Workflow: Visium HD chapter of OSTA book.</p>
 <h4 id="sec-seq-workflow-visium-hd-cell-load-data">Dependencies<a class="anchor" aria-label="anchor" href="#sec-seq-workflow-visium-hd-cell-load-data"></a>
 </h4>
 <div class="sourceCode" id="cb2"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/prabhakarlab/Banksy" class="external-link">Banksy</a></span><span class="op">)</span></span>
+<code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://scenic.aertslab.org" class="external-link">AUCell</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/Biobase" class="external-link">Biobase</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/Bioconductor/BiocStyle" class="external-link">BiocStyle</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/prabhakarlab/Banksy" class="external-link">Banksy</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/YMa-lab/CARDspa" class="external-link">CARDspa</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://dplyr.tidyverse.org" class="external-link">dplyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">DropletUtils</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://bioconductor.org/packages/GenomeInfoDb" class="external-link">GenomeInfoDb</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/sinhrks/ggfortify" class="external-link">ggfortify</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggplot2.tidyverse.org" class="external-link">ggplot2</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://rpkgs.datanovia.com/ggpubr/" class="external-link">ggpubr</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ggrepel.slowkow.com/" class="external-link">ggrepel</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">grDevices</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">grid</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://here.r-lib.org/" class="external-link">here</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r.igraph.org/" class="external-link">igraph</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://docs.ropensci.org/magick/" class="external-link">magick</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://igordot.github.io/msigdbr/" class="external-link">msigdbr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/estellad/OSTA.data" class="external-link">OSTA.data</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://kwstat.github.io/pals/" class="external-link">pals</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://patchwork.data-imaginist.com" class="external-link">patchwork</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">pheatmap</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://plotly-r.com" class="external-link">plotly</a></span><span class="op">)</span></span>
@@ -250,12 +259,16 @@ platforms - Workflow: Visium HD chapter of OSTA book.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">scuttle</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://r-spatial.github.io/sf/" class="external-link">sf</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">SingleCellExperiment</span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/sgunz/sosta" class="external-link">sosta</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/ggrajeda/spacexr" class="external-link">spacexr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/drighelli/SpatialExperiment" class="external-link">SpatialExperiment</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/mjemons/spatialFDA" class="external-link">spatialFDA</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/pachterlab/SpatialFeatureExperiment" class="external-link">SpatialFeatureExperiment</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="http://spatstat.org/" class="external-link">spatstat</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://ellispatrick.github.io/spicyR/" class="external-link">spicyR</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/MicTott/SpotSweeper" class="external-link">SpotSweeper</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://sydneybiox.github.io/Statial" class="external-link">Statial</a></span><span class="op">)</span></span>
+<span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va">stats</span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyr.tidyverse.org" class="external-link">tidyr</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/william-hutchison/tidySpatialExperiment" class="external-link">tidySpatialExperiment</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
@@ -294,13 +307,16 @@ book.</p>
 <span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/OSTA.data/man/OSTA.data.html" class="external-link">OSTA.data_load</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">td</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip</a></span><span class="op">(</span><span class="va">pa</span>, exdir<span class="op">=</span><span class="va">td</span><span class="op">)</span></span></code></pre></div>
-<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting.  -->
+<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting. 
+
+Update: As of January 2026, pull requests branched from this reader have been merged into the VisiumIO and SpatialFeatureExperiment packages, enabling Visium HD cell-segmented data to be read as SpatialExperiment and SpatialFeatureExperiment objects, respectively. 
+-->
 <p>Read in Visium HD cell segmented data as a
 <code>SpatialFeatureExperiment</code> object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsfe</span> <span class="op">&lt;-</span> <span class="fu">readVisiumHDCellSeg</span><span class="op">(</span><span class="va">td</span>, res <span class="op">=</span> <span class="st">"hires"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading layer `cell_segmentations' from data source </span></span>
-<span><span class="co">#&gt;   `/tmp/RtmpqWu94i/file7f039254056/segmented_outputs/cell_segmentations.geojson' </span></span>
+<span><span class="co">#&gt;   `/tmp/RtmpGtmxbn/file2b8565cb180b/segmented_outputs/cell_segmentations.geojson' </span></span>
 <span><span class="co">#&gt;   using driver `GeoJSON'</span></span>
 <span><span class="co">#&gt; Simple feature collection with 220704 features and 1 field</span></span>
 <span><span class="co">#&gt; Geometry type: POLYGON</span></span>
@@ -312,16 +328,16 @@ book.</p>
 <span><span class="co">#&gt; <span style="color: #949494;"># </span><span style="color: #555555;">Features = 18132 | Cells = 220703 | Assays = counts</span></span></span>
 <span><span class="co">#&gt;    .cell Sample              Barcode sample_id pxl_col_in_hires pxl_row_in_hires</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmpqWu94i/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmpGtmxbn/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 220,693 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: pxl_col_in_fullres &lt;dbl&gt;, pxl_row_in_fullres &lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
@@ -347,25 +363,12 @@ tissue density.</p>
 <span><span class="co">#&gt; [1] 49.94411</span></span></code></pre></div>
 <p>Show subset region used for analysis:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="va">getBoxRange</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">obj</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="va">data</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpatialExperiment/man/SpatialExperiment-methods.html" class="external-link">spatialCoords</a></span><span class="op">(</span><span class="va">obj</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> </span>
-<span>    <span class="fu"><a href="https://dplyr.tidyverse.org/reference/summarise.html" class="external-link">summarise</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">pxl_col_in_fullres</span><span class="op">)</span>, xmax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">pxl_col_in_fullres</span><span class="op">)</span>,</span>
-<span>              ymin <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">min</a></span><span class="op">(</span><span class="va">pxl_row_in_fullres</span><span class="op">)</span>, ymax <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Extremes.html" class="external-link">max</a></span><span class="op">(</span><span class="va">pxl_row_in_fullres</span><span class="op">)</span><span class="op">)</span></span>
-<span>  <span class="kw"><a href="https://rdrr.io/r/base/function.html" class="external-link">return</a></span><span class="op">(</span><span class="va">data</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="va">plotBox</span> <span class="op">&lt;-</span> <span class="kw">function</span><span class="op">(</span><span class="va">data</span>, <span class="va">col</span>, <span class="va">lty</span>, <span class="va">lwd</span><span class="op">)</span><span class="op">{</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_tile.html" class="external-link">geom_rect</a></span><span class="op">(</span>data <span class="op">=</span> <span class="va">data</span>,</span>
-<span>            <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>xmin <span class="op">=</span> <span class="va">xmin</span>, xmax <span class="op">=</span> <span class="va">xmax</span>, ymin <span class="op">=</span> <span class="va">ymin</span>, ymax <span class="op">=</span> <span class="va">ymax</span><span class="op">)</span>, </span>
-<span>            color <span class="op">=</span> <span class="va">col</span>, fill <span class="op">=</span> <span class="cn">NA</span>, linetype <span class="op">=</span> <span class="va">lty</span>, linewidth <span class="op">=</span> <span class="va">lwd</span><span class="op">)</span></span>
-<span><span class="op">}</span></span>
-<span></span>
-<span><span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/plotImage.html" class="external-link">plotImage</a></span><span class="op">(</span><span class="va">vhdsfe</span><span class="op">)</span> <span class="op">+</span> </span>
+<code class="sourceCode R"><span><span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/plotImage.html" class="external-link">plotImage</a></span><span class="op">(</span><span class="va">vhdsfe</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">plotBox</span><span class="op">(</span><span class="fu">getBoxRange</span><span class="op">(</span><span class="va">vhdsfe</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#3b3b3b"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu">plotBox</span><span class="op">(</span><span class="fu">getBoxRange</span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"black"</span>, lty <span class="op">=</span> <span class="fl">4</span>, lwd <span class="op">=</span> <span class="fl">2</span><span class="op">/</span><span class="fl">3</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Grey: data coverage; Black: subset region"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="va">center_title</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-subset-cov-box-1.png" class="r-plt" width="576"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-subset-cov-box-1.png" class="r-plt" alt="" width="576"></p>
 <p>Plot cell polygons overlay H&amp;E image for this subset region (in
 black box). Here is an overview of the subset of tissue section that we
 will work on:</p>
@@ -381,7 +384,7 @@ will work on:</p>
 <span><span class="op">(</span><span class="va">p0</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"H&amp;E region"</span><span class="op">)</span> <span class="op">|</span></span>
 <span>  <span class="va">p1</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Overlayed with cell boundaries"</span><span class="op">)</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">center_title</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-subset-he-polygon-1.png" class="r-plt" width="768"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-subset-he-polygon-1.png" class="r-plt" alt="" width="768"></p>
 </div>
 </div>
 <div class="section level3">
@@ -417,7 +420,7 @@ and mitochondrial percentage.</p>
 <span><span class="op">(</span><span class="va">p0</span> <span class="op">|</span> <span class="va">p1</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">gradient_theme</span> <span class="op">&amp;</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/continuous.html" class="external-link">jet</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/loglib-mitopct-1.png" class="r-plt" width="768"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/loglib-mitopct-1.png" class="r-plt" alt="" width="768"></p>
 <div class="section level4">
 <h4 id="spotsweeper">SpotSweeper<a class="anchor" aria-label="anchor" href="#spotsweeper"></a>
 </h4>
@@ -461,7 +464,7 @@ as only a few small cells are flagged as outliers.</p>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow<span class="op">=</span><span class="fl">1</span>, guides<span class="op">=</span><span class="st">"collect"</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">thin_discrete_legend</span> <span class="op">&amp;</span> <span class="va">center_title</span> <span class="op">&amp;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span><span class="st">"discard"</span>, values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"white"</span>, <span class="st">"red"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/qc-vhdsub-plt-1.png" class="r-plt" width="768"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/qc-vhdsub-plt-1.png" class="r-plt" alt="" width="768"></p>
 </div>
 </div>
 <div class="section level3">
@@ -630,7 +633,7 @@ assigned cell types by <code>RCTD</code>.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">trubetskoy</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
 <span><span class="op">(</span><span class="va">p0</span> <span class="op">|</span> <span class="va">p1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">thin_discrete_legend</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/rctd-result-discrete-1.png" class="r-plt" width="768"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/rctd-result-discrete-1.png" class="r-plt" alt="" width="768"></p>
 <p>Previously, we found one cell was flagged as a local outlier by
 <code>SpotSweeper</code>, and now we can check its property.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
@@ -697,7 +700,7 @@ spatial domains.</p>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">kelly</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="va">thin_discrete_legend</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/clus-spa-umap-1.png" class="r-plt" width="384"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/clus-spa-umap-1.png" class="r-plt" alt="" width="336"></p>
 <p>Next, we can perform differential gene expression (DGE) analysis to
 identify markers for each cluster. We also compute the cluster-wise mean
 expression of selected markers:</p>
@@ -718,7 +721,7 @@ heatmap:</p>
 <span><span class="fu"><a href="https://rlang.r-lib.org/reference/exec.html" class="external-link">exec</a></span><span class="op">(</span><span class="va">pheatmap</span>,</span>
 <span>    mat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">pbs</span><span class="op">)</span><span class="op">)</span>, scale <span class="op">=</span> <span class="st">"column"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">101</span><span class="op">)</span>,</span>
 <span>    <span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">common_args_heatmap</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-mgs-hm-1.png" class="r-plt" width="432"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-mgs-hm-1.png" class="r-plt" alt="" width="432"></p>
 <p>We can visualize some marker genes of cluster 1, 3, and 6,
 respectively:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
@@ -734,7 +737,7 @@ respectively:</p>
 <span><span class="op">(</span><span class="va">p0</span> <span class="op">|</span> <span class="va">p1</span> <span class="op">|</span> <span class="va">p2</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">gradient_theme</span> <span class="op">&amp;</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/Vector-class.html" class="external-link">rev</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/grDevices/palettes.html" class="external-link">hcl.colors</a></span><span class="op">(</span><span class="fl">9</span>, <span class="st">"Rocket"</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-mgs-xy-1.png" class="r-plt" width="768"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-mgs-xy-1.png" class="r-plt" alt="" width="768"></p>
 </div>
 </div>
 <div class="section level3">
@@ -755,7 +758,7 @@ respectively:</p>
 <span><span class="va">p0</span> <span class="op">+</span> <span class="va">p1</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">center_title</span> <span class="op">&amp;</span> <span class="va">thin_discrete_legend</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-dec-clu-xy-1.png" class="r-plt" width="768"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-dec-clu-xy-1.png" class="r-plt" alt="" width="768"></p>
 <p>We observe that <code>Banksy</code> delineates tissue borders very
 well, while <code>RCTD</code> provides direct biological insight into
 the underlying clusters. Their concordance can be visualized using a
@@ -763,24 +766,162 @@ heatmap:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">Banksy</span>, <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rlang.r-lib.org/reference/exec.html" class="external-link">exec</a></span><span class="op">(</span><span class="va">pheatmap</span>, <span class="va">fq</span>, <span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">common_args_heatmap</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-dec-clu-hm-1.png" class="r-plt" width="240"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-dec-clu-hm-1.png" class="r-plt" alt="" width="240"></p>
 </div>
 <div class="section level3">
-<h3 id="spatial-statistics">Spatial statistics<a class="anchor" aria-label="anchor" href="#spatial-statistics"></a>
+<h3 id="feature-set-signatures">Feature-set signatures<a class="anchor" aria-label="anchor" href="#feature-set-signatures"></a>
 </h3>
-<p>What makes spatial transcriptomics more powerful than scRNA-seq is
-its linkage to spatial statistics. Visium HD cell level data can be
-modeled as a point pattern process</p>
-<div class="section level4">
-<h4 id="ripleys-k">Ripley’s K<a class="anchor" aria-label="anchor" href="#ripleys-k"></a>
-</h4>
+<p>Individual biomarkers identified in the DGE step may or may not have
+phenotypic relevance. Instead, we can quantify gene sets that are known
+to orchestrate biological functions or pathways, such as metabolic
+activity, cell cycle progression, and cell death, at the single-cell
+level.</p>
+<p>MSigDB provides a programmatic interface to the <a href="https://www.gsea-msigdb.org/gsea/msigdb" class="external-link">Molecular Signatures
+Database (MSigDB)</a> (<span class="citation"><span class="nocase">Subramanian et al.</span> (<a href="#ref-subramanian2005gene">2005</a>)</span>), one of the largest
+collections of molecular signatures and pathways. We start with
+retrieving the human hallmark database.</p>
+<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># retrieve &amp; simplify hallmark gene sets from 'MSigDB'</span></span>
+<span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://igordot.github.io/msigdbr/reference/msigdbr.html" class="external-link">msigdbr</a></span><span class="op">(</span>species<span class="op">=</span><span class="st">"Homo sapiens"</span>, collection<span class="op">=</span><span class="st">"H"</span><span class="op">)</span></span>
+<span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/splitAsList.html" class="external-link">split</a></span><span class="op">(</span><span class="va">db</span><span class="op">$</span><span class="va">ensembl_gene</span>, <span class="va">db</span><span class="op">$</span><span class="va">gs_name</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gs</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"HALLMARK_"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p>Next, we score these gene sets with <em><a href="https://bioconductor.org/packages/3.23/AUCell" class="external-link">AUCell</a></em>
+(<span class="citation"><span class="nocase">Aibar et al.</span> (<a href="#ref-aibar2017scenic">2017</a>)</span>), a rank-based approach
+that (i) ranks genes for every cells, and (ii) compute area under the
+recovery curve (AUC) values for each gene set.</p>
+<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># realize (sparse) gene expression matrix</span></span>
+<span><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/methods/as.html" class="external-link">as</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, <span class="st">"dgCMatrix"</span><span class="op">)</span> </span>
+<span><span class="co"># use ensembl identifiers as rownames</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mtx</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">rowData</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">$</span><span class="va">ID</span></span>
+<span><span class="co"># filter for genes represented in panel</span></span>
+<span><span class="va">.gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">lapply</a></span><span class="op">(</span><span class="va">gs</span>, <span class="va">intersect</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">mtx</span><span class="op">)</span><span class="op">)</span></span>
+<span><span class="co"># keep only those with at least 5 genes</span></span>
+<span><span class="va">.gs</span> <span class="op">&lt;-</span> <span class="va">.gs</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/lapply.html" class="external-link">sapply</a></span><span class="op">(</span><span class="va">.gs</span>, <span class="va">length</span><span class="op">)</span> <span class="op">&gt;=</span> <span class="fl">5</span><span class="op">]</span></span>
+<span><span class="co"># build per-cell gene rankings</span></span>
+<span><span class="va">rnk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/AUCell/man/AUCell_buildRankings.html" class="external-link">AUCell_buildRankings</a></span><span class="op">(</span><span class="va">mtx</span>, plotStats<span class="op">=</span><span class="cn">FALSE</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
+<span><span class="co"># calculate AUC for each gene set in each cell</span></span>
+<span><span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/AUCell/man/AUCell_calcAUC.html" class="external-link">AUCell_calcAUC</a></span><span class="op">(</span>geneSets<span class="op">=</span><span class="va">.gs</span>, rankings<span class="op">=</span><span class="va">rnk</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
+<p>A heatmap can be used to check which signatures are highly expressed
+in which cell types. To diversify the visualization, here we summarize
+the top 2 signatures per cell type, and display their scaled average
+enrichment score in a waterfall plot.</p>
+<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># aggregate AUC values by cellType</span></span>
+<span><span class="va">mu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/aggregateAcrossCells.html" class="external-link">aggregateAcrossCells</a></span><span class="op">(</span><span class="va">auc</span>, ids<span class="op">=</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span>,</span>
+<span>                           use.assay.type<span class="op">=</span><span class="st">"AUC"</span>, statistics<span class="op">=</span><span class="st">"mean"</span><span class="op">)</span></span>
+<span><span class="va">mu_row_scaled</span> <span class="op">&lt;-</span> <span class="fu">rowScale</span><span class="op">(</span><span class="va">mu</span><span class="op">)</span></span>
+<span><span class="va">top_mu</span> <span class="op">&lt;-</span> <span class="fu">getTopSigDF</span><span class="op">(</span><span class="va">mu_row_scaled</span>, top_n <span class="op">=</span> <span class="fl">2</span><span class="op">)</span></span>
+<span></span>
+<span><span class="fu">plotDivergentBar</span><span class="op">(</span><span class="va">top_mu</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/sigbarplot-1.png" class="r-plt" alt="" width="672"></p>
+<p>p53 is a well-known pathway related to tumor cell growth (<span class="citation">Vogelstein et al. (<a href="#ref-vogelstein2000surfing">2000</a>)</span>), and its enrichment
+score can be visualized spatially.</p>
+<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># add results as cell metadata</span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">auc</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">auc</span><span class="op">)</span><span class="op">)</span> </span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, feature <span class="op">=</span> <span class="st">"p53_pathway"</span>,</span>
+<span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> <span class="va">gradient_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"p53 Pathway"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/p53-spatial-1.png" class="r-plt" alt="" width="364.8"></p>
 </div>
+<div class="section level3">
+<h3 id="shape-statistics">Shape statistics<a class="anchor" aria-label="anchor" href="#shape-statistics"></a>
+</h3>
+<p>Because cell segmentation polygons are available for each cell, we
+can derive a range of shape metrics (<span class="citation">Gunz et al.
+(<a href="#ref-gunz2025analysis">2025</a>)</span>).</p>
+<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co"># get cell segmentations</span></span>
+<span><span class="va">cellpo</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpatialFeatureExperiment/man/colGeometries.html" class="external-link">colGeometry</a></span><span class="op">(</span><span class="va">vhdsub</span>, <span class="st">"updatecellSeg"</span><span class="op">)</span></span>
+<span><span class="va">cellpo</span><span class="op">$</span><span class="va">cellType</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span></span>
+<span><span class="co"># get shape metrics</span></span>
+<span><span class="va">shme</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sgunz.github.io/sosta/reference/totalShapeMetrics.html" class="external-link">totalShapeMetrics</a></span><span class="op">(</span><span class="va">cellpo</span><span class="op">)</span></span>
+<span><span class="va">shme</span><span class="op">[</span><span class="fl">1</span><span class="op">:</span><span class="fl">3</span>, <span class="fl">1</span><span class="op">:</span><span class="fl">3</span><span class="op">]</span></span>
+<span><span class="co">#&gt;                   cellpo1     cellpo2     cellpo3</span></span>
+<span><span class="co">#&gt; Area         1067.8050000 854.2350000 2558.400000</span></span>
+<span><span class="co">#&gt; Compactness     0.7758488   0.4156039    0.521787</span></span>
+<span><span class="co">#&gt; Eccentricity    0.8027392   0.5734005    0.740000</span></span></code></pre></div>
+<p>Here we can check the relationship between shape metrics in the first
+two principal components (PCs):</p>
+<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tshme</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="va">shme</span><span class="op">)</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> </span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/autoplot.html" class="external-link">autoplot</a></span><span class="op">(</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/r/stats/prcomp.html" class="external-link">prcomp</a></span><span class="op">(</span><span class="va">tshme</span>, scale. <span class="op">=</span> <span class="cn">TRUE</span><span class="op">)</span>,</span>
+<span>  data <span class="op">=</span> <span class="va">cellpo</span>,</span>
+<span>  color <span class="op">=</span> <span class="st">"cellType"</span>,</span>
+<span>  size <span class="op">=</span> <span class="fl">0.8</span>, alpha <span class="op">=</span> <span class="fl">0.8</span>, </span>
+<span>  loadings.colour <span class="op">=</span> <span class="st">"blue"</span>,</span>
+<span>  loadings.label <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  loadings.label.size <span class="op">=</span> <span class="fl">5</span>, </span>
+<span>  loadings.label.colour <span class="op">=</span> <span class="st">"black"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>values<span class="op">=</span><span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">trubetskoy</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="va">enlarge_legend_dot</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/shme-pca-loading-1.png" class="r-plt" alt="" width="576"></p>
+<p>The first principal component (PC1) explains 42.82% of the
+variability in the shape statistics, and the second principal component
+(PC2) captures 31.66%. The angle between two shape metrics reflects
+their degree of similarity, while the length of a loading indicates the
+strength of a given metric. For example, the loadings of
+<code>fibreLength</code> and <code>Compactness</code> are nearly
+perpendicular, indicating a weak or negative correlation between them,
+which is consistent with their relationship in the scatter plot. We can
+also color the points by the log gene expression of <em>PIGR</em>, a
+common epithelial marker, as shown previously. Cells with high
+<em>PIGR</em> expression tend to exhibit longer
+<code>fibreLength</code>, with no obvious association with
+compactness.</p>
+<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tshme</span><span class="op">$</span><span class="va">logPIGR</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">[</span><span class="st">"PIGR"</span>, <span class="op">]</span></span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">tshme</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">fibreLength</span>, y <span class="op">=</span> <span class="va">Compactness</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>color <span class="op">=</span> <span class="va">logPIGR</span><span class="op">)</span>, alpha <span class="op">=</span> <span class="fl">0.8</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"rocket"</span>, direction <span class="op">=</span> <span class="op">-</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_density_2d.html" class="external-link">geom_density2d</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_smooth.html" class="external-link">geom_smooth</a></span><span class="op">(</span>method<span class="op">=</span><span class="st">'loess'</span>, formula<span class="op">=</span> <span class="va">y</span><span class="op">~</span><span class="va">x</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://rpkgs.datanovia.com/ggpubr/reference/stat_cor.html" class="external-link">stat_cor</a></span><span class="op">(</span>method <span class="op">=</span> <span class="st">"pearson"</span>, label.x.npc <span class="op">=</span> <span class="st">"center"</span>, label.y.npc <span class="op">=</span> <span class="st">"top"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="va">gradient_theme</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"PIGR"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/shape-cor-1.png" class="r-plt" alt="" width="432"></p>
+<p>Next, we can summarize the shape statistics per cell type. We check
+the differences in <code>fibreLength</code> and <code>Compactness</code>
+across cell types.</p>
+<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">tshme</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span>cellType <span class="op">=</span> <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="op">-</span><span class="va">cellType</span>, names_to <span class="op">=</span> <span class="st">"metrics"</span>, values_to <span class="op">=</span> <span class="st">"val"</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">metrics</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Compactness"</span>, <span class="st">"fibreLength"</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">cellType</span>, y <span class="op">=</span> <span class="va">val</span>, fill <span class="op">=</span> <span class="va">cellType</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_violin.html" class="external-link">geom_violin</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">NULL</span><span class="op">)</span>, width <span class="op">=</span> <span class="fl">0.3</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_wrap.html" class="external-link">facet_wrap</a></span><span class="op">(</span><span class="op">~</span><span class="va">metrics</span>, scales <span class="op">=</span> <span class="st">"free"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">trubetskoy</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/shape-violin-1.png" class="r-plt" alt="" width="691.2">
+We observer more uniform distribution in <code>Compactness</code>, while
+more variability in <code>fibreLength</code> across cell types.</p>
+<p>We can also view these shape metrics, such as
+<code>fibreLength</code>, spatially:</p>
+<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">tshme</span><span class="op">)</span><span class="op">]</span> <span class="op">&lt;-</span> <span class="va">tshme</span></span>
+<span></span>
+<span><span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"fibreLength"</span>,</span>
+<span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_gradient.html" class="external-link">scale_fill_gradientn</a></span><span class="op">(</span>colors <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#3B3EA8"</span>, <span class="st">"#278EC8"</span>, <span class="st">"orange"</span>, <span class="st">"yellow"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="va">gradient_theme</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"fibreLength"</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/fiblen-spatial-1.png" class="r-plt" alt="" width="364.8"></p>
+<p>For example, immune cells have shorter <code>fibreLength</code>
+compared to tumor and stromal cells, which is also shown in the boxplot
+above.</p>
 </div>
 <div class="section level3">
 <h3 id="interrogating-the-spatial-arrangement-of-our-cells-">Interrogating the spatial arrangement of our cells.<a class="anchor" aria-label="anchor" href="#interrogating-the-spatial-arrangement-of-our-cells-"></a>
 </h3>
+<p>What makes spatial transcriptomics more powerful than scRNA-seq is
+its integration with spatial statistics. There are two types of measures
+for spatial association: global and local.</p>
 <div class="section level4">
-<h4 id="localisation">Localisation<a class="anchor" aria-label="anchor" href="#localisation"></a>
+<h4 id="global-spatial-association">Global spatial association<a class="anchor" aria-label="anchor" href="#global-spatial-association"></a>
 </h4>
 <p>We next quantify spatial proximity between annotated cell types. The
 <code><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise()</a></code> function from the <em><a href="https://bioconductor.org/packages/3.23/spicyR" class="external-link">spicyR</a></em>
@@ -790,7 +931,7 @@ summarizing whether cell type A tends to appear within distance
 randomness. Here we use a radius of 200 units (~50 microns) to capture
 immediate neighborhood effects at approximately one to two cell
 diameters.</p>
-<div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">crossK</span> <span class="op">=</span> <span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise</a></span><span class="op">(</span><span class="va">vhdsub</span>, </span>
 <span>                     r <span class="op">=</span> <span class="fl">200</span>, </span>
 <span>                     cellType <span class="op">=</span> <span class="st">"cellType"</span>,</span>
@@ -804,13 +945,75 @@ before diving deeper. To aid interpretation, follow the sign: values
 above zero indicate spatial attraction at radius <code>r</code> (more
 co-occurrence than expected), while values below zero indicate spatial
 repulsion.</p>
-<div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/imageCrossPlot.html" class="external-link">imageCrossPlot</a></span><span class="op">(</span><span class="va">crossK</span>, limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">400</span>,<span class="fl">400</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/spicy-pairwise-plot-1.png" class="r-plt" width="576"></p>
+<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/imageCrossPlot.html" class="external-link">imageCrossPlot</a></span><span class="op">(</span><span class="va">crossK</span>, limits <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="op">-</span><span class="fl">400</span>,<span class="fl">400</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="va">gradient_theme</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Spatial association"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.line <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>, axis.ticks <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/spicy-pairwise-plot-1.png" class="r-plt" alt="" width="480"></p>
 <p>We can re-visit the spatial composition of cell types, annotated by
 <code>RCTD</code> above, to build intuition for these statistics. This
 helps confirm that any strong pairwise signals are visible in the image
 and not driven by a handful of cells.</p>
+</div>
+<div class="section level4">
+<h4 id="local-indicator-of-spatial-association---lisa">Local indicator of spatial association - LISA<a class="anchor" aria-label="anchor" href="#local-indicator-of-spatial-association---lisa"></a>
+</h4>
+<p>Visium HD cell-level data can be modeled as a point pattern process
+(<span class="citation">Emons et al. (<a href="#ref-emons2025harnessing">2025</a>)</span>). Different than the
+previous global average measure, local indicators of spatial association
+(LISA) accounts for the local contribution of each cell (<span class="citation">Anselin (<a href="#ref-anselin1995local">1995</a>)</span>). First, we construct the
+plotting data frame that contains LISA Ripley’s K value for only Tumor
+cells.</p>
+<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatialFDA/man/dot-speToDf.html" class="external-link">.speToDf</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
+<span><span class="va">pp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatialFDA/man/dot-dfToppp.html" class="external-link">.dfToppp</a></span><span class="op">(</span><span class="va">df</span>, marks<span class="op">=</span><span class="st">"cellType"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># subset to only Tumor cells </span></span>
+<span><span class="va">ppSub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/subset.html" class="external-link">subset</a></span><span class="op">(</span><span class="va">pp</span>, <span class="va">marks</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="st">"Tumor"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="co"># calculate LISA K curves</span></span>
+<span><span class="va">resLocal</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatstat.explore/man/localK.html" class="external-link">localK</a></span><span class="op">(</span><span class="va">ppSub</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> </span>
+<span></span>
+<span><span class="co"># code adapted from </span></span>
+<span><span class="co"># https://robinsonlabuzh.github.io/pasta/01-imaging-univar-ppSOD.html</span></span>
+<span><span class="va">df</span> <span class="op">&lt;-</span> <span class="va">resLocal</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://tidyr.tidyverse.org/reference/pivot_longer.html" class="external-link">pivot_longer</a></span><span class="op">(</span>cols <span class="op">=</span> <span class="fu"><a href="https://tidyselect.r-lib.org/reference/starts_with.html" class="external-link">starts_with</a></span><span class="op">(</span><span class="st">"iso"</span><span class="op">)</span>, names_to<span class="op">=</span><span class="st">"curve"</span><span class="op">)</span> </span>
+<span></span>
+<span><span class="va">sel</span> <span class="op">&lt;-</span> <span class="va">df</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">r</span> <span class="op">&gt;</span> <span class="fl">700.5630</span> <span class="op">&amp;</span> <span class="va">r</span> <span class="op">&lt;</span> <span class="fl">702.4388</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>sel<span class="op">=</span><span class="va">value</span><span class="op">)</span> <span class="op">|&gt;</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/select.html" class="external-link">select</a></span><span class="op">(</span><span class="va">curve</span>, <span class="va">sel</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">plt_df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate-joins.html" class="external-link">left_join</a></span><span class="op">(</span><span class="va">df</span>, <span class="va">sel</span><span class="op">)</span></span>
+<span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="va">plt_df</span><span class="op">)</span></span>
+<span><span class="co">#&gt; <span style="color: #949494;"># A tibble: 6 × 5</span></span></span>
+<span><span class="co">#&gt;       r  theo curve   value      sel</span></span>
+<span><span class="co">#&gt;   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>    <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">1</span>     0     0 iso0001     0 4<span style="text-decoration: underline;">642</span>842.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">2</span>     0     0 iso0002     0 4<span style="text-decoration: underline;">042</span>413.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">3</span>     0     0 iso0003     0 4<span style="text-decoration: underline;">173</span>456.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">4</span>     0     0 iso0004     0 4<span style="text-decoration: underline;">113</span>007.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     0     0 iso0005     0 2<span style="text-decoration: underline;">766</span>533.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     0     0 iso0006     0 4<span style="text-decoration: underline;">535</span>711.</span></span></code></pre></div>
+<p>Plot the LISA Ripley’s K value for each tumor cell, colored by its
+value at a radius of 700 μm. Curves above the gray line representing
+complete spatial randomness (CSR) indicate highly clustered tumor
+cells.</p>
+<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">plt_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">r</span>, <span class="va">value</span>, group<span class="op">=</span><span class="va">curve</span>, col<span class="op">=</span><span class="va">sel</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">theo</span><span class="op">)</span>, linetype<span class="op">=</span><span class="fl">2</span>, col<span class="op">=</span><span class="st">"darkgray"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept<span class="op">=</span><span class="fl">700</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"mako"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">xlab</a></span><span class="op">(</span><span class="st">"Radius (r)"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_continuous.html" class="external-link">scale_y_continuous</a></span><span class="op">(</span>breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="fl">0</span>, <span class="fl">2e6</span>, <span class="fl">4e6</span><span class="op">)</span>, labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"0"</span>, <span class="st">"2"</span>, <span class="st">"4"</span><span class="op">)</span>,</span>
+<span>                     name <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/bquote.html" class="external-link">bquote</a></span><span class="op">(</span><span class="st">"Relationship value x"</span><span class="op">~</span><span class="fl">10</span><span class="op">^</span><span class="fl">6</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span>, </span>
+<span>        axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size<span class="op">=</span><span class="fl">14</span><span class="op">)</span>,</span>
+<span>        panel.grid.major <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"grey90"</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/lisa-plot-1.png" class="r-plt" alt="" width="432"></p>
 </div>
 <div class="section level4">
 <h4 id="localisation-in-context">Localisation in context<a class="anchor" aria-label="anchor" href="#localisation-in-context"></a>
@@ -840,9 +1043,8 @@ repulsion at a chosen spatial scale. The method is flexible: you can
 define any grouping of interest as a “parent” or context, and then
 interrogate the conditional relationships of one population relative to
 that context.</p>
-<div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span></span>
-<span><span class="co">## Create a vector saying which cells are in the immune context</span></span>
+<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="co">## Create a vector saying which cells are in the immune context</span></span>
 <span><span class="va">immune</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"T_cells"</span>, <span class="st">"Myeloid"</span>, <span class="st">"B_cells"</span><span class="op">)</span></span>
 <span></span>
 <span><span class="co">## Define the parents we want to use as contexts</span></span>
@@ -860,7 +1062,7 @@ that context.</p>
 <span>  r <span class="op">=</span> <span class="fl">200</span></span>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Let us visualize the results.</p>
-<div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotKontext</span> <span class="op">&lt;-</span> <span class="va">resultsKontextual</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">original</span>, <span class="va">kontextual</span>, label <span class="op">=</span> <span class="va">test</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
@@ -870,38 +1072,49 @@ that context.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/plotly/man/ggplotly.html" class="external-link">ggplotly</a></span><span class="op">(</span><span class="va">plotKontext</span><span class="op">)</span></span></code></pre></div>
 <div class="plotly html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:768px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"7f037f60bf0":{"x":{},"y":{},"label":{},"type":"scatter"},"7f03aa86186":{"yintercept":{}},"7f0123734fd":{"xintercept":{}}},"cur_data":"7f037f60bf0","visdat":{"7f037f60bf0":["function (y) ","x"],"7f03aa86186":["function (y) ","x"],"7f0123734fd":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"2b8532e10774":{"x":{},"y":{},"label":{},"type":"scatter"},"2b85135e6085":{"yintercept":{}},"2b8533a9191d":{"xintercept":{}}},"cur_data":"2b8532e10774","visdat":{"2b8532e10774":["function (y) ","x"],"2b85135e6085":["function (y) ","x"],"2b8533a9191d":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
 around Tumor) to confirm at which scales the effect appears, which is
 often informative for processes like invasion fronts or peritumoral
 niches.</p>
-<div class="sourceCode" id="cb38"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/kontextCurve.html" class="external-link">kontextCurve</a></span><span class="op">(</span></span>
-<span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
-<span>  from <span class="op">=</span> <span class="st">"Tumor"</span>,</span>
-<span>  to <span class="op">=</span> <span class="st">"Myeloid"</span>,</span>
-<span>  parent <span class="op">=</span> <span class="va">immune</span>,</span>
-<span>  rs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">500</span>, <span class="fl">50</span><span class="op">)</span>,</span>
-<span>  image <span class="op">=</span> <span class="st">"sample01"</span>,</span>
-<span>  cellType <span class="op">=</span> <span class="st">"cellType"</span>,</span>
-<span>  imageID <span class="op">=</span> <span class="st">"sample_id"</span></span>
+<span>  cells <span class="op">=</span> <span class="va">vhdsub</span>, rs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">500</span>, <span class="fl">50</span><span class="op">)</span>, </span>
+<span>  from <span class="op">=</span> <span class="st">"Tumor"</span>, to <span class="op">=</span> <span class="st">"Myeloid"</span>, parent <span class="op">=</span> <span class="va">immune</span>, se <span class="op">=</span> <span class="cn">TRUE</span>,</span>
+<span>  image <span class="op">=</span> <span class="st">"sample01"</span>, cellType <span class="op">=</span> <span class="st">"cellType"</span>, imageID <span class="op">=</span> <span class="st">"sample_id"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/kontextPlot.html" class="external-link">kontextPlot</a></span><span class="op">(</span><span class="va">curves</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/ktx-scale-curve-1.png" class="r-plt" width="576"></p>
+<span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/kontextPlot.html" class="external-link">kontextPlot</a></span><span class="op">(</span><span class="va">curves</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_color_manual</a></span><span class="op">(</span>labels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Kontextual"</span>, <span class="st">"L-Function"</span><span class="op">)</span>, </span>
+<span>                     values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"#00BE70"</span>, <span class="st">"darkblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"lightgreen"</span>, <span class="st">"lightblue"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>panel.grid.major <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"grey90"</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span>,</span>
+<span>        legend.position <span class="op">=</span> <span class="st">"top"</span>, </span>
+<span>        legend.text <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">13</span><span class="op">)</span>, </span>
+<span>        axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size <span class="op">=</span> <span class="fl">14</span><span class="op">)</span><span class="op">)</span> </span>
+<span><span class="va">p</span><span class="op">@</span><span class="va">layers</span><span class="op">$</span><span class="va">geom_hline</span><span class="op">$</span><span class="va">aes_params</span><span class="op">$</span><span class="va">colour</span> <span class="op">&lt;-</span> <span class="st">"black"</span> <span class="co"># update dashed line color</span></span>
+<span><span class="va">p</span><span class="op">$</span><span class="va">layers</span><span class="op">[[</span><span class="st">"geom_ribbon"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">show.legend</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span>   <span class="co"># remove geom ribbon box</span></span>
+<span><span class="va">p</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/ktx-scale-curve-1.png" class="r-plt" alt="" width="432">
+Because immune cells are already densely packed, Kontextual identifies
+myeloid cells as being particularly close to tumor cells beyond a
+50-pixel radius. In contrast, when immune context is not considered, the
+L-function suggests that myeloid cells and tumor cells are not spatially
+close.</p>
 <p>To aid interpretation, we can also re-plot the spatial map with the
 immune context grayed and the two focal types colored. This quickly
 links our statistical findings to a tangible patterns in the tissue.</p>
-<div class="sourceCode" id="cb39"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ct_interest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Myeloid"</span>, <span class="st">"Tumor"</span><span class="op">)</span></span>
-<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="op">!</span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="va">ct_interest</span><span class="op">)</span>, <span class="cn">NA</span>, <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span></span>
-<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span>, levels <span class="op">=</span> <span class="va">ct_interest</span><span class="op">)</span></span>
+<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="op">!</span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="va">ct_interest</span><span class="op">)</span>, </span>
+<span>                       <span class="st">"Other"</span>, <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span></span>
+<span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/factor.html" class="external-link">factor</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span>, levels <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="va">ct_interest</span>, <span class="st">"Other"</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"myetu"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>name   <span class="op">=</span> <span class="st">"cellType"</span>,</span>
-<span>                    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Myeloid"</span> <span class="op">=</span> <span class="st">"#f58231"</span>, <span class="st">"Tumor"</span> <span class="op">=</span> <span class="st">"#bfef45"</span><span class="op">)</span>,</span>
-<span>                    na.value <span class="op">=</span> <span class="st">"grey90"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>                    values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Myeloid"</span> <span class="op">=</span> <span class="st">"#f58231"</span>, <span class="st">"Tumor"</span> <span class="op">=</span> <span class="st">"#bfef45"</span>,</span>
+<span>                               <span class="st">"Other"</span> <span class="op">=</span> <span class="st">"grey90"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="va">thin_discrete_legend</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/ktx-spatial-highlight-1.png" class="r-plt" width="528"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/ktx-spatial-highlight-1.png" class="r-plt" alt="" width="384"></p>
 </div>
 </div>
 <div class="section level3">
@@ -937,7 +1150,7 @@ the abundance of a chosen neighbor rises.</p>
 </h4>
 <p>First, we need to quantify the abundance of each cell type around
 each cell.</p>
-<div class="sourceCode" id="cb40"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb51"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/getAbundances.html" class="external-link">getAbundances</a></span><span class="op">(</span><span class="va">vhdsub</span>,</span>
 <span>  r <span class="op">=</span> <span class="fl">200</span>,</span>
 <span>  cellType <span class="op">=</span> <span class="st">"cellType"</span>,</span>
@@ -945,7 +1158,7 @@ each cell.</p>
 <span><span class="op">)</span></span></code></pre></div>
 <p>Next, we focus on whether Myeloid cells show distinct expression
 patterns when they are located close to Tumor cells.</p>
-<div class="sourceCode" id="cb41"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb52"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stateChanges</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/calcStateChanges.html" class="external-link">calcStateChanges</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"abundances"</span>,</span>
@@ -1003,7 +1216,7 @@ that change as Myeloid cells are near tumor cells. One of the top genes
 on this list is <em>SPP1</em> which is known to be expressed in
 tumor-associated macrophages. We can visualize this relationship using
 the <code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges()</a></code> function.</p>
-<div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
 <span>  image <span class="op">=</span> <span class="st">"sample01"</span>,</span>
@@ -1018,24 +1231,29 @@ the <code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChang
 <span>  method <span class="op">=</span> <span class="st">"lm"</span></span>
 <span><span class="op">)</span></span>
 <span></span>
-<span><span class="va">p</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-plot-spp1-1.png" class="r-plt" width="672"></p>
+<span><span class="va">p</span><span class="op">[[</span><span class="fl">1</span><span class="op">]</span><span class="op">]</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_void</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.key.width <span class="op">=</span> <span class="fu">grid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">0.5</span>, <span class="st">"lines"</span><span class="op">)</span>, </span>
+<span>        legend.key.height <span class="op">=</span> <span class="fu">grid</span><span class="fu">::</span><span class="fu"><a href="https://rdrr.io/r/grid/unit.html" class="external-link">unit</a></span><span class="op">(</span><span class="fl">1</span>, <span class="st">"lines"</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/facet_null.html" class="external-link">facet_null</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Cell Points: Myeloid, Cell Density: Tumor"</span><span class="op">)</span> <span class="op">+</span> <span class="va">center_title</span> </span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-plot-spp1-1.png" class="r-plt" alt="" width="451.2"></p>
 </div>
 <div class="section level4">
 <h4 id="contamination">Contamination<a class="anchor" aria-label="anchor" href="#contamination"></a>
 </h4>
 <p>However, there are some genes that not expressed in Macrophages such
 as <em>CEACAM6</em> which are likely lateral spillover or diffusion.</p>
-<div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sce</span><span class="op">[</span>, <span class="va">down_sample</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/ttservice/man/join_features.html" class="external-link">join_features</a></span><span class="op">(</span>features <span class="op">=</span> <span class="st">"CEACAM6"</span>, shape <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Level1</span>, y <span class="op">=</span> <span class="va">CEACAM6</span>, fill <span class="op">=</span> <span class="va">Level1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/stat_summary.html" class="external-link">stat_summary</a></span><span class="op">(</span>fun <span class="op">=</span> <span class="va">mean</span>, geom <span class="op">=</span> <span class="st">"bar"</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">trubetskoy</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_bw</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
-<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://dplyr.tidyverse.org/reference/mutate.html" class="external-link">mutate</a></span><span class="op">(</span>logCEACAM6 <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/Log.html" class="external-link">log1p</a></span><span class="op">(</span><span class="va">CEACAM6</span><span class="op">)</span><span class="op">)</span> <span class="op">|&gt;</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">Level1</span>, y <span class="op">=</span> <span class="va">logCEACAM6</span>, fill <span class="op">=</span> <span class="va">Level1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_boxplot.html" class="external-link">geom_boxplot</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">trubetskoy</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ylab</a></span><span class="op">(</span><span class="st">"CEACAM6 log expression"</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span>,</span>
+<span>        legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="va">thin_discrete_legend</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-ceacam6-check-1.png" class="r-plt" width="576"></p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/smark-ceacam6-check-1.png" class="r-plt" alt="" width="336"></p>
 <p>Because we already computed <code>RCTD</code> weights, we can
 mitigate contamination by adding deconvolution-derived components as
 covariates to our models. By storing the <code>RCTD</code> cell-type
@@ -1045,7 +1263,7 @@ weight matrix into <code>reducedDim(vhdsub, "RCTD")</code>, we can pass
 estimates of contamination in its modelling to hopefully remove false
 positives like <em>CEACAM6</em> while preserving genuine
 relationships.</p>
-<div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb55"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">contam</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">rctd_result_level1</span>, <span class="fl">1</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/r/base/matrix.html" class="external-link">as.matrix</a></span><span class="op">(</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1057,7 +1275,7 @@ longer significant at a threshold of 0.05. The rank of this gene falls
 from 14 to 173, while other Macrophage-relevant top genes, such as
 <em>SPP1</em>, keep their high rankings and remain
 contamination-invariant.</p>
-<div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">stateChangesCon</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/calcStateChanges.html" class="external-link">calcStateChanges</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
 <span>  type <span class="op">=</span> <span class="st">"abundances"</span>,</span>
@@ -1070,9 +1288,24 @@ contamination-invariant.</p>
 <span></span>
 <span><span class="va">stateChangesCon</span> <span class="op">|&gt;</span> <span class="fu"><a href="https://dplyr.tidyverse.org/reference/filter.html" class="external-link">filter</a></span><span class="op">(</span><span class="va">marker</span> <span class="op">==</span> <span class="st">"CEACAM6"</span><span class="op">)</span></span>
 <span><span class="co">#&gt;    imageID primaryCellType otherCellType  marker      coef     tval        pval</span></span>
-<span><span class="co">#&gt; 1 sample01         Myeloid         Tumor CEACAM6 0.0225659 2.376978 0.008727562</span></span>
+<span><span class="co">#&gt; 1 sample01         Myeloid         Tumor CEACAM6 0.0225659 2.376978 0.008727561</span></span>
 <span><span class="co">#&gt;         fdr</span></span>
 <span><span class="co">#&gt; 1 0.4283528</span></span></code></pre></div>
+<p>Next, we can visualize the change of ranking of <em>CEACAM6</em>
+after decontamination, among the top 20 marker genes as Myeloid cells
+get near Tumor cells.</p>
+<div class="sourceCode" id="cb57"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu">plotRankChange</span><span class="op">(</span>target_gene <span class="op">=</span> <span class="st">"CEACAM6"</span>, n <span class="op">=</span> <span class="fl">20</span>, <span class="va">stateChanges</span>, <span class="va">stateChangesCon</span><span class="op">)</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/rnkplot-1.png" class="r-plt" alt="" width="499.2"></p>
+<p>So far, we have analyzed one CRC sample from patient P2. In fact,
+<span class="citation"><span class="nocase">Oliveira et al.</span> (<a href="#ref-oliveira2025high">2025</a>)</span> includes multiple patients
+in this Visium HD public dataset, spanning different disease conditions
+(healthy vs. cancer). To apply spatial statistics to assess cell-type
+colocalization across multiple conditions, you can refer to the
+Multi-sample chapters of the OSTA book: a. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-diff-spatial-patterns.html" class="external-link">Differential
+spatial patterns</a>, b. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-diff-colocalization.html" class="external-link">Differential
+colocalization</a>, c. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-structure-based.html" class="external-link">Structure-based
+analysis</a></p>
 </div>
 </div>
 <div class="section level3">
@@ -1080,11 +1313,11 @@ contamination-invariant.</p>
 </h3>
 <p>You can try using a finer resolution of cell type classified by
 <code>RCTD</code>.</p>
-<div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
+<div class="sourceCode" id="cb58"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"data/rctd_result_level2.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>Or you can try using a different deconvolution algorithm.</p>
-<div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">2025</span><span class="op">)</span></span>
+<div class="sourceCode" id="cb59"><pre class="downlit sourceCode r">
+<code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/Random.html" class="external-link">set.seed</a></span><span class="op">(</span><span class="fl">1000</span><span class="op">)</span></span>
 <span><span class="va">vhd2</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SpatialExperiment/man/SpatialExperiment-methods.html" class="external-link">spatialCoords</a></span><span class="op">(</span><span class="va">vhd2</span><span class="op">)</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"x"</span>, <span class="st">"y"</span><span class="op">)</span></span>
 <span><span class="va">sce2</span> <span class="op">&lt;-</span><span class="va">sce</span><span class="op">[</span>, <span class="va">down_sample</span><span class="op">]</span></span>
@@ -1112,11 +1345,43 @@ contamination-invariant.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html" class="external-link">reducedDim</a></span><span class="op">(</span><span class="va">vhdsub</span>, <span class="st">"CARD"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span></span></code></pre></div>
 <div id="refs" class="references csl-bib-body hanging-indent">
+<div id="ref-aibar2017scenic" class="csl-entry">
+<span class="nocase">Aibar, Sara, Carmen Bravo González-Blas, Thomas
+Moerman, et al.</span> 2017. <span>“SCENIC: Single-Cell Regulatory
+Network Inference and Clustering.”</span> <em>Nature Methods</em> 14
+(11): 1083–86.
+</div>
+<div id="ref-anselin1995local" class="csl-entry">
+Anselin, Luc. 1995. <span>“Local Indicators of Spatial
+Association—LISA.”</span> <em>Geographical Analysis</em> 27 (2): 93–115.
+</div>
+<div id="ref-emons2025harnessing" class="csl-entry">
+Emons, Martin, Samuel Gunz, Helena L Crowell, et al. 2025.
+<span>“Harnessing the Potential of Spatial Statistics for Spatial Omics
+Data with Pasta.”</span> <em>Nucleic Acids Research</em> 53 (17):
+gkaf870.
+</div>
+<div id="ref-gunz2025analysis" class="csl-entry">
+Gunz, Samuel, Helena L Crowell, and Mark D Robinson. 2025.
+<span>“Analysis of Anatomical Multi-Cellular Structures from Spatial
+Omics Data Using Sosta.”</span> <em>bioRxiv</em>, 2025–10.
+</div>
 <div id="ref-oliveira2025high" class="csl-entry">
 <span class="nocase">Oliveira, Michelli Faria de, Juan Pablo Romero,
 Meii Chung, et al.</span> 2025. <span>“High-Definition Spatial
 Transcriptomic Profiling of Immune Cell Populations in Colorectal
 Cancer.”</span> <em>Nature Genetics</em>, 1–12.
+</div>
+<div id="ref-subramanian2005gene" class="csl-entry">
+<span class="nocase">Subramanian, Aravind, Pablo Tamayo, Vamsi K Mootha,
+et al.</span> 2005. <span>“Gene Set Enrichment Analysis: A
+Knowledge-Based Approach for Interpreting Genome-Wide Expression
+Profiles.”</span> <em>Proceedings of the National Academy of
+Sciences</em> 102 (43): 15545–50.
+</div>
+<div id="ref-vogelstein2000surfing" class="csl-entry">
+Vogelstein, Bert, David Lane, and Arnold J Levine. 2000. <span>“Surfing
+the P53 Network.”</span> <em>Nature</em> 408 (6810): 307–10.
 </div>
 </div>
 </div>
