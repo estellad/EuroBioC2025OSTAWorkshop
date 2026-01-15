@@ -4,3 +4,4 @@ inst/doc
 *Rproj
 .DS_Store
 docs/.
+*.tar.gz
