@@ -224,7 +224,7 @@ p1 <- plotSpatialFeature(vhdsub, bbox = unlist(getBoxRange(vhdsub)),
   center_title
 ```
 
-```{r hidden1, echo = FALSE, `results = "hide"`}
+```{r hidden1, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -299,7 +299,7 @@ p0 + p1 + p2 +
 
 ```
 
-```{r hidden2, echo = FALSE, `results = "hide"`}
+```{r hidden2, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -447,7 +447,7 @@ vhdsub <- vhdsub[, !vhdsub$discard]
 dim(vhdsub)
 ```
 
-```{r hidden3, echo = FALSE, `results = "hide"`}
+```{r hidden3, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -537,7 +537,7 @@ p2 <- plotSpatialFeature(vhdsub, features = "DES",
 
 ```
 
-```{r hidden4, echo = FALSE, `results = "hide"`}
+```{r hidden4, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -569,7 +569,7 @@ fq <- prop.table(table(vhdsub$Banksy, vhdsub$cellType), 1)
 exec(pheatmap, fq, !!!common_args_heatmap)
 ```
 
-```{r hidden5, echo = FALSE, `results = "hide"`}
+```{r hidden5, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -621,7 +621,7 @@ plotSpatialFeature(vhdsub, feature = "p53_pathway",
   ggtitle("p53 Pathway")
 ```
 
-```{r hidden6, echo = FALSE, `results = "hide"`}
+```{r hidden6, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -696,7 +696,7 @@ plotSpatialFeature(vhdsub, features = "fibreLength",
 
 For example, immune cells have shorter `fibreLength` compared to tumor and stromal cells, which is also shown in the boxplot above. 
 
-```{r hidden7, echo = FALSE, `results = "hide"`}
+```{r hidden7, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -852,7 +852,7 @@ plotSpatialFeature(vhdsub, features = "myetu",
   thin_discrete_legend
 ```
 
-```{r hidden8, echo = FALSE, `results = "hide"`}
+```{r hidden8, echo = FALSE, results = "hide"}
 gc()
 ```
 
@@ -971,7 +971,7 @@ plotRankChange(target_gene = "CEACAM6", n = 20, stateChanges, stateChangesCon)
 
 So far, we have analyzed one CRC sample from patient P2. In fact, @oliveira2025high includes multiple patients in this Visium HD public dataset, spanning different disease conditions (healthy vs. cancer). To apply spatial statistics to assess cell-type colocalization across multiple conditions, you can refer to the Multi-sample chapters of the OSTA book: a. [Differential spatial patterns](https://bioconductor.org/books/release/OSTA/pages/mult-diff-spatial-patterns.html), b. [Differential colocalization](https://bioconductor.org/books/release/OSTA/pages/mult-diff-colocalization.html), c. [Structure-based analysis](https://bioconductor.org/books/release/OSTA/pages/mult-structure-based.html)
 
-```{r hidden9, echo = FALSE, `results = "hide"`}
+```{r hidden9, echo = FALSE, results = "hide"}
 gc()
 ```
 
