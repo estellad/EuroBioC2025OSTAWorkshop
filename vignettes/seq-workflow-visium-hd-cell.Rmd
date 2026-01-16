@@ -681,7 +681,8 @@ tshme |>
   theme(axis.text.x = element_text(angle = 45, hjust = 1)) + 
   guides(fill = "none")
 ```
-We observer more uniform distribution in `Compactness`, while more variability in `fibreLength` across cell types. 
+
+We observe more uniform distribution in `Compactness`, while more variability in `fibreLength` across cell types. 
 
 
 We can also view these shape metrics, such as `fibreLength`, spatially:
@@ -835,6 +836,7 @@ p$layers[["geom_ribbon"]]$show.legend <- FALSE   # remove geom ribbon box
 p
 
 ```
+
 Because immune cells are already densely packed, Kontextual identifies myeloid cells as being particularly close to tumor cells beyond a 50-pixel radius. In contrast, when immune context is not considered, the L-function suggests that myeloid cells and tumor cells are not spatially close.
 
 To aid interpretation, we can also re-plot the spatial map with the immune context grayed and the two focal types colored. This quickly links our statistical findings to a tangible patterns in the tissue.
