@@ -91,7 +91,7 @@
 <h2 id="workflow-visium-hd-cell-level">Workflow: Visium HD cell-level<a class="anchor" aria-label="anchor" href="#workflow-visium-hd-cell-level"></a>
 </h2>
 <p>Authors: Yixing E. Dong<a href="#fn1" class="footnote-ref" id="fnref1"><sup>1</sup></a>, Ellis Patrick<a href="#fn2" class="footnote-ref" id="fnref2"><sup>2</sup></a>.</p>
-<p>Last modified: 24 November, 2025.</p>
+<p>Last modified: 20 January, 2026.</p>
 <div class="section level3">
 <h3 id="preparation">Preparation<a class="anchor" aria-label="anchor" href="#preparation"></a>
 </h3>
@@ -112,6 +112,11 @@ through <em><a href="https://bioconductor.org/packages/3.23/OSTA.data" class="ex
 <span><span class="co">#&gt; [3] "nucleus_segmentations.geojson"   "spatial"</span></span></code></pre></div>
 <p>We prepared a reader for Visium HD segmented output at
 <code>./vignettes/utils.R</code>.</p>
+<div class="callout-note">
+<p><strong>Update (January 2026):</strong> Pull requests branched from
+this reader have been merged into the <code>VisiumIO</code> and
+<code>SpatialFeatureExperiment</code> packages.</p>
+</div>
 </div>
 <div class="section level4">
 <h4 id="r-bioconductor-packages-used">
@@ -159,7 +164,7 @@ data</li>
 <li>Visualize Visium HD data as polygons or cell centroids</li>
 <li>Extract morphological metrics from cell polygons and make
 inference</li>
-<li>Perform spatial analysis in a tissue slice</li>
+<li>Conduct spatial analysis in a tissue slice</li>
 </ul>
 </div>
 <div class="section level4">
@@ -222,9 +227,9 @@ cellular units more intuitive for deriving insights, this output may
 attract more interest than bin-level data. However, bins outside cell
 boundaries can still provide valuable information for many research
 topics in the tumor microenvironment. In this workflow, we will
-demonstrate several analysis steps at the cell level using the same
-dataset, subsetted to the same region, as in the Sequencing-based
-platforms - Workflow: Visium HD chapter of OSTA book.</p>
+demonstrate several cell-level analysis steps using the same dataset,
+subsetted to the same region, as in the <em>Sequencing-based platforms -
+Workflow: Visium HD bin-level</em> chapter of the OSTA book.</p>
 <div class="section level4">
 <h4 id="sec-seq-workflow-visium-hd-cell-load-data">Dependencies<a class="anchor" aria-label="anchor" href="#sec-seq-workflow-visium-hd-cell-load-data"></a>
 </h4>
@@ -273,8 +278,8 @@ platforms - Workflow: Visium HD chapter of OSTA book.</p>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/william-hutchison/tidySpatialExperiment" class="external-link">tidySpatialExperiment</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://tidyverse.tidyverse.org" class="external-link">tidyverse</a></span><span class="op">)</span></span>
 <span><span class="kw"><a href="https://rdrr.io/r/base/library.html" class="external-link">library</a></span><span class="op">(</span><span class="va"><a href="https://github.com/pachterlab/voyager" class="external-link">Voyager</a></span><span class="op">)</span></span></code></pre></div>
-<p>We source the reader in <code>utils.R</code> and specify alias for
-plotting themes.</p>
+<p>We source the reader defined in <code>utils.R</code> and specify
+alias for plotting themes.</p>
 <div class="sourceCode" id="cb3"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="kw"><a href="https://rdrr.io/r/base/source.html" class="external-link">source</a></span><span class="op">(</span><span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"vignettes/utils.R"</span><span class="op">)</span><span class="op">)</span></span>
 <span></span>
@@ -298,25 +303,23 @@ plotting themes.</p>
 <div class="section level4">
 <h4 id="load-spatial-data">Load spatial data<a class="anchor" aria-label="anchor" href="#load-spatial-data"></a>
 </h4>
-<p>Output files from SpaceRanger v4 are listed in
-<code>/segmented_outputs</code> folder, with the expected structure
-detailed in the Background - Importing data chapter of the OSTA
-book.</p>
+<p>Output files from SpaceRanger v4 are located in
+<code>/segmented_outputs</code> folder, following the expected structure
+described in the <em>Background - Importing data</em> chapter of the
+OSTA book.</p>
 <div class="sourceCode" id="cb4"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">id</span> <span class="op">&lt;-</span> <span class="st">"VisiumHD_HumanColon_Oliveira"</span></span>
 <span><span class="va">pa</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/OSTA.data/man/OSTA.data.html" class="external-link">OSTA.data_load</a></span><span class="op">(</span><span class="va">id</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/files2.html" class="external-link">dir.create</a></span><span class="op">(</span><span class="va">td</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/tempfile.html" class="external-link">tempfile</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/unzip.html" class="external-link">unzip</a></span><span class="op">(</span><span class="va">pa</span>, exdir<span class="op">=</span><span class="va">td</span><span class="op">)</span></span></code></pre></div>
-<!-- Behind the scenes, we start with reading in cell segmentation as a `sf` object, scaling factor `.json` file, and an image `.png` file. We will use high resolution image, as it gives expected H&E details under segmented cell masks. The filtered count matrix `.h5` is read in as a `SingleCellExperiment`. Then, we construct a `SpatialExperiment` object with the above information, where the cell centroids were derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` to a `SpatialFeatureExperiment`. The `sf` polygons are then stored in `colGeometries()`. To match the polygons with the orientation of the H&E, we had to flip the y-axis of these geometreis and the spatialcoordinates. Finally, we prepare the scaled coordinates in `colData()` for easier subsetting. 
-
-Update: As of January 2026, pull requests branched from this reader have been merged into the VisiumIO and SpatialFeatureExperiment packages, enabling Visium HD cell-segmented data to be read as SpatialExperiment and SpatialFeatureExperiment objects, respectively. 
+<!-- Behind the scenes, we begin by reading the cell segmentation as an `sf` object, along with the scaling factor `.json` file and the image `.png` file. We use the high resolution image, as it provides the expected H&E detail beneath the segmented cell masks. The filtered count matrix (`.h5`) is read in as a `SingleCellExperiment`. We then construct a `SpatialExperiment` object using the components above, where cell centroids are derived from the `sf` object and used as spatial coordinates. Next, we coerce the `SpatialExperiment` into a `SpatialFeatureExperiment`, with the `sf` polygons stored in `colGeometries()`. To align the polygons with the orientation of the H&E image, we flip the y-axis of both the geometreis and the spatial coordinates. Finally, we store the scaled coordinates in `colData()` to facilitate easier subsetting. 
 -->
-<p>Read in Visium HD cell segmented data as a
+<p>We read the Visium HD cell-segmented data into a
 <code>SpatialFeatureExperiment</code> object.</p>
 <div class="sourceCode" id="cb5"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsfe</span> <span class="op">&lt;-</span> <span class="fu">readVisiumHDCellSeg</span><span class="op">(</span><span class="va">td</span>, res <span class="op">=</span> <span class="st">"hires"</span><span class="op">)</span></span>
 <span><span class="co">#&gt; Reading layer `cell_segmentations' from data source </span></span>
-<span><span class="co">#&gt;   `/tmp/RtmpPxNJRF/file7297340b172/segmented_outputs/cell_segmentations.geojson' </span></span>
+<span><span class="co">#&gt;   `/tmp/RtmplLkdAr/filefc16bb33af6/segmented_outputs/cell_segmentations.geojson' </span></span>
 <span><span class="co">#&gt;   using driver `GeoJSON'</span></span>
 <span><span class="co">#&gt; Simple feature collection with 220704 features and 1 field</span></span>
 <span><span class="co">#&gt; Geometry type: POLYGON</span></span>
@@ -328,16 +331,16 @@ Update: As of January 2026, pull requests branched from this reader have been me
 <span><span class="co">#&gt; <span style="color: #949494;"># </span><span style="color: #555555;">Features = 18132 | Cells = 220703 | Assays = counts</span></span></span>
 <span><span class="co">#&gt;    .cell Sample              Barcode sample_id pxl_col_in_hires pxl_row_in_hires</span></span>
 <span><span class="co">#&gt;    <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span> <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>               <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>   <span style="color: #949494; font-style: italic;">&lt;chr&gt;</span>                <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span>            <span style="color: #949494; font-style: italic;">&lt;dbl&gt;</span></span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
-<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmpPxNJRF/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 1</span> 3     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>555.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 2</span> 4     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>551.            <span style="text-decoration: underline;">3</span>569.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 3</span> 5     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 4</span> 6     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>549.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 5</span> 7     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>565.            <span style="text-decoration: underline;">3</span>570.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 6</span> 8     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>553.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 7</span> 9     /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>557.            <span style="text-decoration: underline;">3</span>573.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 8</span> 10    /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>562.            <span style="text-decoration: underline;">3</span>572.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;"> 9</span> 11    /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>571.            <span style="text-decoration: underline;">3</span>571.</span></span>
+<span><span class="co">#&gt; <span style="color: #BCBCBC;">10</span> 12    /tmp/RtmplLkdAr/fi… cellid… sample01             <span style="text-decoration: underline;">3</span>546.            <span style="text-decoration: underline;">3</span>570.</span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 220,693 more rows</span></span></span>
 <span><span class="co">#&gt; <span style="color: #949494;"># ℹ 2 more variables: pxl_col_in_fullres &lt;dbl&gt;, pxl_row_in_fullres &lt;dbl&gt;</span></span></span>
 <span><span class="co">#&gt; </span></span>
@@ -347,21 +350,22 @@ Update: As of January 2026, pull requests branched from this reader have been me
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt; Graphs:</span></span>
 <span><span class="co">#&gt; sample01:</span></span></code></pre></div>
-<p>To keep runtime low, our downstream analysis will be performed on a
-subset area of 16 µm bins (1/64 of the data coverage area). We restrict
-to the same region from as we have done in the OSTA book.</p>
+<p>To keep the runtime low, downstream analyses are performed on a
+subset region corresponding to 16 µm bins, representing approximately
+1/64 of the full data coverage area. We restrict the analysis to the
+same region used in the OSTA book.</p>
 <div class="sourceCode" id="cb6"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu">subsetVisiumHD</span><span class="op">(</span><span class="va">vhdsfe</span>,</span>
 <span>                         xmin <span class="op">=</span> <span class="fl">4214.937</span>, xmax <span class="op">=</span> <span class="fl">4465.761</span>,</span>
 <span>                         ymin <span class="op">=</span> <span class="fl">2979.286</span>, ymax <span class="op">=</span> <span class="fl">3211.817</span><span class="op">)</span></span></code></pre></div>
-<p>Here, as we have restricted the analysis to only 1/64 of the entire
-tissue coverage, the number of cells in the subset <code>sf</code>
-object should also be reduced by roughly this fraction, depending on
-tissue density.</p>
+<p>Because the analysis is limited to this subset of the tissue, the
+number of cells in the corresponding <code>sf</code> object is expected
+to be reduced by roughly the same fraction, depending on local tissue
+density.</p>
 <div class="sourceCode" id="cb7"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">vhdsfe</span><span class="op">)</span><span class="op">/</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/nrow.html" class="external-link">ncol</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 49.94411</span></span></code></pre></div>
-<p>Show subset region used for analysis:</p>
+<p>Show the subset region used for analysis:</p>
 <div class="sourceCode" id="cb8"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/plotImage.html" class="external-link">plotImage</a></span><span class="op">(</span><span class="va">vhdsfe</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu">plotBox</span><span class="op">(</span><span class="fu">getBoxRange</span><span class="op">(</span><span class="va">vhdsfe</span><span class="op">)</span>, col <span class="op">=</span> <span class="st">"#3b3b3b"</span>, lty <span class="op">=</span> <span class="fl">2</span>, lwd <span class="op">=</span> <span class="fl">1</span><span class="op">/</span><span class="fl">2</span><span class="op">)</span> <span class="op">+</span></span>
@@ -369,9 +373,9 @@ tissue density.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Grey: data coverage; Black: subset region"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="va">center_title</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-subset-cov-box-1.png" class="r-plt" alt="" width="576"></p>
-<p>Plot cell polygons overlay H&amp;E image for this subset region (in
-black box). Here is an overview of the subset of tissue section that we
-will work on:</p>
+<p>Plot cell polygons overlaid on the H&amp;E image for this subset
+region (in black box). Here is an overview of the tissue subset that we
+will use throughout the workflow.</p>
 <div class="sourceCode" id="cb9"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span><span class="op">$</span><span class="va">polygon</span> <span class="op">&lt;-</span> <span class="fl">1</span></span>
 <span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/plotImage.html" class="external-link">plotImage</a></span><span class="op">(</span><span class="va">vhdsub</span>, bbox <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/unlist.html" class="external-link">unlist</a></span><span class="op">(</span><span class="fu">getBoxRange</span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> </span>
@@ -388,9 +392,9 @@ will work on:</p>
 </div>
 </div>
 <div class="section level3">
-<h3 id="which-cells-passed-quality-check">Which cells passed quality check?<a class="anchor" aria-label="anchor" href="#which-cells-passed-quality-check"></a>
+<h3 id="which-cells-pass-quality-check">Which cells pass quality check?<a class="anchor" aria-label="anchor" href="#which-cells-pass-quality-check"></a>
 </h3>
-<p>Get cell-level QC metrics for visualization with <em><a href="https://bioconductor.org/packages/3.23/scuttle" class="external-link">scuttle</a></em>.</p>
+<p>Compute cell-level QC metrics using <em><a href="https://bioconductor.org/packages/3.23/scuttle" class="external-link">scuttle</a></em>.</p>
 <div class="sourceCode" id="cb10"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Visualize library size to the polygons</span></span>
 <span><span class="va">sub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>mt <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/grep.html" class="external-link">grep</a></span><span class="op">(</span><span class="st">"^MT-"</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span>
@@ -406,8 +410,8 @@ will work on:</p>
 <span><span class="co">#&gt; 84476 cellid_000084476-1 1004 6.912743           4.681275</span></span>
 <span><span class="co">#&gt; 84504 cellid_000084504-1  835 6.728629           5.029940</span></span>
 <span><span class="co">#&gt; 84560 cellid_000084560-1  436 6.079933           2.981651</span></span></code></pre></div>
-<p>Here is an overview of the cells colored by their log library size
-and mitochondrial percentage.</p>
+<p>Here is an overview of cells colored by their log library size and
+mitochondrial percentage.</p>
 <div class="sourceCode" id="cb11"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"log_sum"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -425,9 +429,9 @@ and mitochondrial percentage.</p>
 <h4 id="spotsweeper">SpotSweeper<a class="anchor" aria-label="anchor" href="#spotsweeper"></a>
 </h4>
 <p><em><a href="https://bioconductor.org/packages/3.23/SpotSweeper" class="external-link">SpotSweeper</a></em>
-determines outliers based on low log-library size, few uniquely detected
-features, or a high mitochondrial fraction compared to their surrounding
-neighborhood:</p>
+identifies outliers based on low log-library size, a low number of
+uniquely detected features, or a high mitochondrial fraction relative to
+the surrounding neighborhood:</p>
 <div class="sourceCode" id="cb12"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpotSweeper/man/localOutliers.html" class="external-link">localOutliers</a></span><span class="op">(</span><span class="va">vhdsub</span>, metric<span class="op">=</span><span class="st">"sum"</span>, direction<span class="op">=</span><span class="st">"lower"</span>, log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/SpotSweeper/man/localOutliers.html" class="external-link">localOutliers</a></span><span class="op">(</span><span class="va">vhdsub</span>, metric<span class="op">=</span><span class="st">"detected"</span>, direction<span class="op">=</span><span class="st">"lower"</span>, log<span class="op">=</span><span class="cn">TRUE</span><span class="op">)</span></span>
@@ -442,8 +446,9 @@ neighborhood:</p>
 <span><span class="co">#&gt; FALSE  TRUE </span></span>
 <span><span class="co">#&gt;  4406    13</span></span></code></pre></div>
 <p>We can visualize the local outliers identified by
-<code>SpotSweeper</code> spatially. However, they are difficult to see,
-as only a few small cells are flagged as outliers.</p>
+<code>SpotSweeper</code> in a spatial context. However, they are
+difficult to discern, as only a small number of relatively small cells
+are flagged as outliers.</p>
 <div class="sourceCode" id="cb13"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">common_args_qc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/list.html" class="external-link">list</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="cn">NA</span>, color <span class="op">=</span> <span class="st">"grey90"</span>, linewidth <span class="op">=</span> <span class="fl">0.1</span>, </span>
 <span>                    colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span></span>
@@ -473,14 +478,13 @@ as only a few small cells are flagged as outliers.</p>
 <div class="section level4">
 <h4 id="load-reference">Load reference<a class="anchor" aria-label="anchor" href="#load-reference"></a>
 </h4>
-<p>This Visium HD dataset provides matched scRNA-seq for the same
-tissue, which avoids tissue and batch effects that often complicate
-label transfer. The <code>Level1</code> column contains broad,
-interpretable populations that are well suited for deconvolution and
-downstream interpretation. We will use these labels to map likely cell
-identities onto our Visium HD cells.</p>
-<p>First lets load in the data from the <code>OSTA.data</code>
-package.</p>
+<p>This Visium HD dataset includes matched scRNA-seq data from the same
+tissue, which helps avoid tissue-specific and batch effects that often
+complicate label transfer. The <code>Level1</code> column contains
+broad, interpretable cell populations that are well suited for
+deconvolution and downstream interpretation. We use these labels to map
+likely cell identities onto the Visium HD cells.</p>
+<p>First, we load the data from the <code>OSTA.data</code> package.</p>
 <div class="sourceCode" id="cb14"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## SCE ref</span></span>
 <span><span class="va">id</span> <span class="op">&lt;-</span> <span class="st">"Chromium_HumanColon_Oliveira"</span></span>
@@ -505,9 +509,9 @@ package.</p>
 <span></span>
 <span><span class="co"># exclude cells deemed to be of low-quality</span></span>
 <span><span class="va">sce</span> <span class="op">&lt;-</span> <span class="va">sce</span><span class="op">[</span>, <span class="va">sce</span><span class="op">$</span><span class="va">QCFilter</span> <span class="op">==</span> <span class="st">"Keep"</span><span class="op">]</span></span></code></pre></div>
-<p>We are wanting to use this single cell data as a reference. It has
-two resolutions of cell annotations. Lets check out what cells labels
-are in <code>Level1</code>.</p>
+<p>We will use this single-cell dataset as a reference. It contains cell
+annotations at two resolutions. First, let’s inspect the labels in
+<code>Level1.</code></p>
 <div class="sourceCode" id="cb15"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># tabulate subpopulations</span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">sce</span><span class="op">$</span><span class="va">Level1</span><span class="op">)</span></span>
@@ -518,12 +522,12 @@ are in <code>Level1</code>.</p>
 <span><span class="co">#&gt;                 22763                 25105                  4199 </span></span>
 <span><span class="co">#&gt;         Smooth Muscle               T cells                 Tumor </span></span>
 <span><span class="co">#&gt;                 43308                 29272                 65626</span></span></code></pre></div>
-<p>Spaces can make manipulating data tricky sometimes so let’s replace
+<p>Spaces can make manipulating data tricky sometimes, so let’s replace
 them with underscores.</p>
 <div class="sourceCode" id="cb16"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sce</span><span class="op">$</span><span class="va">Level1</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">" "</span>, <span class="st">"_"</span>, <span class="va">sce</span><span class="op">$</span><span class="va">Level1</span><span class="op">)</span></span></code></pre></div>
 <p>For speed, we down-sample to at most 1,000 cells per reference class.
-This preserves diversity within each class while keeping memory and
+This preserves diversity within each class while keeping memory use and
 runtime manageable.</p>
 <div class="sourceCode" id="cb17"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># (this is done only to keep runtime/memory low)</span></span>
@@ -534,36 +538,40 @@ runtime manageable.</p>
 <h4 id="rctd---robust-decomposition-of-cell-type-mixtures-in-spatial-transcriptomics">RCTD - Robust decomposition of cell type mixtures in spatial
 transcriptomics<a class="anchor" aria-label="anchor" href="#rctd---robust-decomposition-of-cell-type-mixtures-in-spatial-transcriptomics"></a>
 </h4>
-<p>There are many ways to transfer labels from single-cell data to
-spatial data. We use <em><a href="https://bioconductor.org/packages/3.23/spacexr" class="external-link">spacexr</a></em>
-(i.e. <code>RCTD</code>) because it performs competitively in public
-benchmarks, models mixed signals explicitly, and assigns each spatial
-unit a clear class as a singlet or as one of several doublet types.
-<code>RCTD</code> was originally designed for spot-based platforms such
-as 10x Visium, where each spot captures RNA from multiple cells. It
-treats the observed counts in a spot as a mixture of reference cell-type
-expression profiles and uses a likelihood model to estimate non-negative
-weights for each candidate cell type. It then compares a singlet model
-against a doublet model to determine whether one cell type is sufficient
-to explain the counts or whether two are required. The method also
-learns scale factors to account for platform differences and total RNA
-content, which helps it transfer labels across technologies.</p>
-<p>In our setting we apply <code>RCTD</code> at cellular resolution
+<p>There are many approaches for transferring labels from single-cell
+data to spatial data. Here, we use <em><a href="https://bioconductor.org/packages/3.23/spacexr" class="external-link">spacexr</a></em>
+(i.e., <code>RCTD</code>) because it performs competitively in public
+benchmarks (<span class="citation">Sang-Aram et al. (<a href="#ref-sang2024spotless">2024</a>)</span>; <span class="citation">Li
+et al. (<a href="#ref-li2023comprehensive">2023</a>)</span>; <span class="citation">Gaspard-Boulinc et al. (<a href="#ref-gaspard2025cell">2025</a>)</span>), explicitly models mixed
+signals, and assigns each spatial unit a clear classification as either
+a singlet or one of several doublet types.</p>
+<p><code>RCTD</code> was originally developed for spot-based platforms
+such as 10x Visium, where each spot captures RNA from multiple cells.
+The method models the observed counts in each spot as a mixture of
+reference cell-type expression profiles and uses a likelihood-based
+framework to estimate non-negative weights for each candidate cell type.
+It then compares a singlet model with a doublet model to determine
+whether the counts are best explained by one or two cell types. In
+addition, <code>RCTD</code> learns scale factors to account for
+differences in platform characteristics and total RNA content,
+facilitating robust label transfer across technologies (<span class="citation">Cable et al. (<a href="#ref-cable2022robust">2022</a>)</span>).</p>
+<p>In our setting, we apply <code>RCTD</code> at cellular resolution
 using segmented Visium HD data. Although each unit is intended to
-represent a single cell, there are still cases where the measured counts
-reflect more than one cell type. This can arise from partial volume
-effects at cell boundaries, segmentation errors, tightly packed regions,
-or local diffusion of transcripts. Running <code>RCTD</code> in doublet
-mode remains useful here because it can flag these cases and provide a
-principled estimate of the most likely composition. In practice we
-expect most units to be classified as singlets, with a minority of
-doublets that warrant closer inspection or additional filtering.</p>
-<p>Unfortunately running <code>RCTD</code> is slow, so we will load a
-precompiled version.</p>
+represent a single cell, there are cases where the measured counts may
+reflect contributions from multiple cell types. This can arise from
+partial-volume effects at cell boundaries, segmentation errors, densely
+packed regions, or local diffusion of transcripts. Running
+<code>RCTD</code> in doublet mode remains useful in this context, as it
+can flag such cases and provide a principled estimate of the most likely
+composition. In practice, we expect most units to be classified as
+singlets, with a smaller fraction of doublets that warrant closer
+inspection or additional filtering.</p>
+<p>Because running <code>RCTD</code> is computationally intensive, we
+load a precomputed result for this workflow.</p>
 <div class="sourceCode" id="cb18"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># data("rctd_result_level1.RData", package = "EuroBioC2025_OSTA_Workshop")</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/load.html" class="external-link">load</a></span><span class="op">(</span><span class="fu">here</span><span class="fu">::</span><span class="fu"><a href="https://here.r-lib.org/reference/here.html" class="external-link">here</a></span><span class="op">(</span><span class="st">"data/rctd_result_level1.RData"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>!!! Do not run this in the workshop it will take 30 mins.</p>
+<p>!!! Do not run this in the workshop, as it will take 30 mins.</p>
 <div class="sourceCode" id="cb19"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># ## Perform initial preprocessing of the visiumHD and single cell reference data</span></span>
 <span><span class="co"># rctd_data &lt;- createRctd(spatial_experiment = vhdsub,              # Our visium HD data</span></span>
@@ -574,8 +582,9 @@ precompiled version.</p>
 <span><span class="co"># ## Perform the deconvolution.</span></span>
 <span><span class="co"># rctd_result_level1 &lt;- runRctd(rctd_data, max_cores = 4, rctd_mode = "doublet")</span></span>
 <span><span class="co"># # save(rctd_result_level1, file = here::here("data/rctd_result_level1.RData"))</span></span></code></pre></div>
-<p>Note: <code>RCTD</code> does have some internal QC, so lets check if
-anything was filtered out prior to running deconvolution.</p>
+<p>Note: <code>RCTD</code> includes internal quality control steps, so
+we first check whether any cells were filtered out before running the
+deconvolution.</p>
 <div class="sourceCode" id="cb20"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/r/base/dim.html" class="external-link">dim</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 18132  4419</span></span>
@@ -591,10 +600,10 @@ anything was filtered out prior to running deconvolution.</p>
 <span><span class="co">#&gt; [1] 14</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/utils/head.html" class="external-link">head</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/sort.html" class="external-link">sort</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">sum</span><span class="op">)</span><span class="op">)</span></span>
 <span><span class="co">#&gt; [1] 14 18 19 19 22 23</span></span></code></pre></div>
-<p>The spot labels are saved in the <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> as
-<code>spot_class</code>. This provides a quick quality check: a majority
-of singlet classifications at cell resolution is expected and supports
-the validity of the H&amp;E-guided segmentation.</p>
+<p>The spot labels are stored in <code><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">colData()</a></code> as
+<code>spot_class</code>. This provides a quick quality check: observing
+a majority of singlet classifications at cellular resolution is expected
+and supports the validity of the H&amp;E-guided segmentation.</p>
 <div class="sourceCode" id="cb21"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">rctd_result_level1</span><span class="op">$</span><span class="va">spot_class</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -602,7 +611,8 @@ the validity of the H&amp;E-guided segmentation.</p>
 <span><span class="co">#&gt;               115              2660              1347               296</span></span></code></pre></div>
 <p>We then synchronize the deconvolution labels back into our
 <code>vhdsub</code> <code>SpatialFeatureExperiment</code> object by
-matching cell ids to keep everything aligned.</p>
+matching cell IDs, ensuring that all components remain properly
+aligned.</p>
 <div class="sourceCode" id="cb22"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># Subset to RCTD filtered object for convenience</span></span>
 <span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span><span class="op">[</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span><span class="op">]</span></span>
@@ -622,8 +632,8 @@ matching cell ids to keep everything aligned.</p>
 <span><span class="co">#&gt;                   529                   547                    11 </span></span>
 <span><span class="co">#&gt;         Smooth_Muscle               T_cells                 Tumor </span></span>
 <span><span class="co">#&gt;                    90                   262                  1012</span></span></code></pre></div>
-<p>We can visualize the spatial location of singlets, doublets, or the
-assigned cell types by <code>RCTD</code>.</p>
+<p>We can visualize the spatial distribution of singlets, doublets, or
+the cell types assigned by <code>RCTD</code>.</p>
 <div class="sourceCode" id="cb23"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"cellTypeClass"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -634,8 +644,9 @@ assigned cell types by <code>RCTD</code>.</p>
 <span></span>
 <span><span class="op">(</span><span class="va">p0</span> <span class="op">|</span> <span class="va">p1</span><span class="op">)</span> <span class="op">&amp;</span> <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/rctd-result-discrete-1.png" class="r-plt" alt="" width="768"></p>
-<p>Previously, we found one cell was flagged as a local outlier by
-<code>SpotSweeper</code>, and now we can check its property.</p>
+<p>Previously, we identified a cell that was flagged as a local outlier
+by <code>SpotSweeper</code>. We can now examine its properties in more
+detail.</p>
 <div class="sourceCode" id="cb24"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">subsets_mt_percent_outliers</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">)</span></span>
 <span><span class="co">#&gt; </span></span>
@@ -646,8 +657,8 @@ assigned cell types by <code>RCTD</code>.</p>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellTypeClass</span><span class="op">[</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">subsets_mt_percent_outliers</span> <span class="op">==</span> <span class="cn">TRUE</span><span class="op">]</span></span>
 <span><span class="co">#&gt; [1] doublet_uncertain</span></span>
 <span><span class="co">#&gt; Levels: reject singlet doublet_certain doublet_uncertain</span></span></code></pre></div>
-<p>Filter out low quality cells from the
-<code>SpatialFeatureExperiment</code> object, prior to spatial
+<p>Filter out low-quality cells from the
+<code>SpatialFeatureExperiment</code> object prior to performing spatial
 clustering.</p>
 <div class="sourceCode" id="cb25"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="va">vhdsub</span><span class="op">[</span>, <span class="op">!</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">discard</span><span class="op">]</span></span>
@@ -658,8 +669,9 @@ clustering.</p>
 <div class="section level3">
 <h3 id="spatial-domain-identification">Spatial domain identification<a class="anchor" aria-label="anchor" href="#spatial-domain-identification"></a>
 </h3>
-<p>First, we identify highly variable genes (HVGs) in the target area.
-Note that spatially variable genes (SVGs) could be used instead.</p>
+<p>First, we identify highly variable genes (HVGs) within the target
+region. Note that spatially variable genes (SVGs) could be used as an
+alternative.</p>
 <div class="sourceCode" id="cb26"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">vhdsub</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/logNormCounts.html" class="external-link">logNormCounts</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
 <span><span class="va">dec</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scran/man/modelGeneVar.html" class="external-link">modelGeneVar</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
@@ -694,16 +706,16 @@ spatial domains.</p>
 <span><span class="co">#&gt; </span></span>
 <span><span class="co">#&gt;    1    2    3    4    5    6    7 </span></span>
 <span><span class="co">#&gt; 1287  844  700  560  471  281  263</span></span></code></pre></div>
-<p>Now we can visualize clustering result spatially.</p>
+<p>We can now visualize the clustering results spatially.</p>
 <div class="sourceCode" id="cb28"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"Banksy"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_manual.html" class="external-link">scale_fill_manual</a></span><span class="op">(</span>values <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/unname.html" class="external-link">unname</a></span><span class="op">(</span><span class="fu">pals</span><span class="fu">::</span><span class="fu"><a href="https://kwstat.github.io/pals/reference/discrete.html" class="external-link">kelly</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/clus-spa-umap-1.png" class="r-plt" alt="" width="336"></p>
-<p>Next, we can perform differential gene expression (DGE) analysis to
-identify markers for each cluster. We also compute the cluster-wise mean
-expression of selected markers:</p>
+<p>Next, we perform differential gene expression (DGE) analysis to
+identify marker genes for each cluster. We also compute the cluster-wise
+mean expression of selected markers.</p>
 <div class="sourceCode" id="cb29"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># differential gene expression analysis</span></span>
 <span><span class="va">mgs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scran/man/findMarkers.html" class="external-link">findMarkers</a></span><span class="op">(</span><span class="va">vhdsub</span>, groups <span class="op">=</span> <span class="va">vhdsub</span><span class="op">$</span><span class="va">Banksy</span>, direction <span class="op">=</span> <span class="st">"up"</span><span class="op">)</span></span>
@@ -714,16 +726,15 @@ expression of selected markers:</p>
 <span><span class="va">pbs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/aggregateAcrossCells.html" class="external-link">aggregateAcrossCells</a></span><span class="op">(</span><span class="va">vhdsub</span>, </span>
 <span>    ids <span class="op">=</span> <span class="va">vhdsub</span><span class="op">$</span><span class="va">Banksy</span>, subset.row <span class="op">=</span> <span class="va">top</span>, </span>
 <span>    use.assay.type <span class="op">=</span> <span class="st">"logcounts"</span>, statistics <span class="op">=</span> <span class="st">"mean"</span><span class="op">)</span></span></code></pre></div>
-<p>The marker genes in each cluster can be visualized with a
-heatmap:</p>
+<p>Marker genes for each cluster can be visualized using a heatmap.:</p>
 <div class="sourceCode" id="cb30"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># visualize averages z-scaled across clusters</span></span>
 <span><span class="fu"><a href="https://rlang.r-lib.org/reference/exec.html" class="external-link">exec</a></span><span class="op">(</span><span class="va">pheatmap</span>,</span>
 <span>    mat <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/t.html" class="external-link">t</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SummarizedExperiment/man/SummarizedExperiment-class.html" class="external-link">assay</a></span><span class="op">(</span><span class="va">pbs</span><span class="op">)</span><span class="op">)</span>, scale <span class="op">=</span> <span class="st">"column"</span>, breaks <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="op">-</span><span class="fl">2</span>, <span class="fl">2</span>, length <span class="op">=</span> <span class="fl">101</span><span class="op">)</span>,</span>
 <span>    <span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">common_args_heatmap</span><span class="op">)</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-mgs-hm-1.png" class="r-plt" alt="" width="432"></p>
-<p>We can visualize some marker genes of cluster 1, 3, and 6,
-respectively:</p>
+<p>Here, we highlight selected marker genes from clusters 1, 3, and 6,
+and also visualize their expression patterns in a spatial context:</p>
 <div class="sourceCode" id="cb31"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"MMP2"</span>, </span>
 <span>                   colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"MMP2"</span><span class="op">)</span> </span>
@@ -743,7 +754,8 @@ respectively:</p>
 <div class="section level3">
 <h3 id="concordance-of-deconvolution-clustering">Concordance of deconvolution &amp; clustering<a class="anchor" aria-label="anchor" href="#concordance-of-deconvolution-clustering"></a>
 </h3>
-<p>We can visualize the results spatially:</p>
+<p>Here, we juxtapose the spatial plots of the deconvolution and
+clustering results.</p>
 <div class="sourceCode" id="cb32"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p0</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/Voyager/man/plotSpatialFeature.html" class="external-link">plotSpatialFeature</a></span><span class="op">(</span><span class="va">vhdsub</span>, features <span class="op">=</span> <span class="st">"cellType"</span>, </span>
 <span>                         colGeometryName <span class="op">=</span> <span class="st">"updatecellSeg"</span><span class="op">)</span> <span class="op">+</span> </span>
@@ -759,10 +771,10 @@ respectively:</p>
 <span>  <span class="fu"><a href="https://patchwork.data-imaginist.com/reference/plot_layout.html" class="external-link">plot_layout</a></span><span class="op">(</span>nrow<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">&amp;</span></span>
 <span>  <span class="va">center_title</span> <span class="op">&amp;</span> <span class="va">thin_discrete_legend</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/plt-dec-clu-xy-1.png" class="r-plt" alt="" width="768"></p>
-<p>We observe that <code>Banksy</code> delineates tissue borders very
-well, while <code>RCTD</code> provides direct biological insight into
-the underlying clusters. Their concordance can be visualized using a
-heatmap:</p>
+<p>We observe that <code>Banksy</code> delineates tissue boundaries
+effectively, while <code>RCTD</code> provides direct biological insight
+into the underlying clusters. The concordance between the two methods
+can be visualized using a heatmap:</p>
 <div class="sourceCode" id="cb33"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">fq</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/proportions.html" class="external-link">prop.table</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/table.html" class="external-link">table</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">Banksy</span>, <span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span><span class="op">)</span>, <span class="fl">1</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rlang.r-lib.org/reference/exec.html" class="external-link">exec</a></span><span class="op">(</span><span class="va">pheatmap</span>, <span class="va">fq</span>, <span class="op">!</span><span class="op">!</span><span class="op">!</span><span class="va">common_args_heatmap</span><span class="op">)</span></span></code></pre></div>
@@ -772,23 +784,23 @@ heatmap:</p>
 <h3 id="feature-set-signatures">Feature-set signatures<a class="anchor" aria-label="anchor" href="#feature-set-signatures"></a>
 </h3>
 <p>Individual biomarkers identified in the DGE step may or may not have
-phenotypic relevance. Instead, we can quantify gene sets that are known
-to orchestrate biological functions or pathways, such as metabolic
+direct phenotypic relevance. Instead, we can quantify gene sets that are
+known to orchestrate biological functions or pathways, such as metabolic
 activity, cell cycle progression, and cell death, at the single-cell
 level.</p>
 <p>MSigDB provides a programmatic interface to the <a href="https://www.gsea-msigdb.org/gsea/msigdb" class="external-link">Molecular Signatures
 Database (MSigDB)</a> (<span class="citation"><span class="nocase">Subramanian et al.</span> (<a href="#ref-subramanian2005gene">2005</a>)</span>), one of the largest
-collections of molecular signatures and pathways. We start with
-retrieving the human hallmark database.</p>
+curated collections of molecular signatures and pathways. We begin by
+retrieving the human Hallmark gene set collection.</p>
 <div class="sourceCode" id="cb34"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># retrieve &amp; simplify hallmark gene sets from 'MSigDB'</span></span>
 <span><span class="va">db</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://igordot.github.io/msigdbr/reference/msigdbr.html" class="external-link">msigdbr</a></span><span class="op">(</span>species<span class="op">=</span><span class="st">"Homo sapiens"</span>, collection<span class="op">=</span><span class="st">"H"</span><span class="op">)</span></span>
 <span><span class="va">gs</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/S4Vectors/man/splitAsList.html" class="external-link">split</a></span><span class="op">(</span><span class="va">db</span><span class="op">$</span><span class="va">ensembl_gene</span>, <span class="va">db</span><span class="op">$</span><span class="va">gs_name</span><span class="op">)</span></span>
 <span><span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gs</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/chartr.html" class="external-link">tolower</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/grep.html" class="external-link">gsub</a></span><span class="op">(</span><span class="st">"HALLMARK_"</span>, <span class="st">""</span>, <span class="fu"><a href="https://rdrr.io/r/base/names.html" class="external-link">names</a></span><span class="op">(</span><span class="va">gs</span><span class="op">)</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
-<p>Next, we score these gene sets with <em><a href="https://bioconductor.org/packages/3.23/AUCell" class="external-link">AUCell</a></em>
+<p>Next, we score these gene sets using <em><a href="https://bioconductor.org/packages/3.23/AUCell" class="external-link">AUCell</a></em>
 (<span class="citation"><span class="nocase">Aibar et al.</span> (<a href="#ref-aibar2017scenic">2017</a>)</span>), a rank-based approach
-that (i) ranks genes for every cells, and (ii) compute area under the
-recovery curve (AUC) values for each gene set.</p>
+that (i) ranks genes for each cell and (ii) computes the area under the
+recovery curve (AUC) for each gene set.</p>
 <div class="sourceCode" id="cb35"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># realize (sparse) gene expression matrix</span></span>
 <span><span class="va">mtx</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/methods/as.html" class="external-link">as</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/assays.html" class="external-link">logcounts</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, <span class="st">"dgCMatrix"</span><span class="op">)</span> </span>
@@ -802,10 +814,10 @@ recovery curve (AUC) values for each gene set.</p>
 <span><span class="va">rnk</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/AUCell/man/AUCell_buildRankings.html" class="external-link">AUCell_buildRankings</a></span><span class="op">(</span><span class="va">mtx</span>, plotStats<span class="op">=</span><span class="cn">FALSE</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span>
 <span><span class="co"># calculate AUC for each gene set in each cell</span></span>
 <span><span class="va">auc</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/AUCell/man/AUCell_calcAUC.html" class="external-link">AUCell_calcAUC</a></span><span class="op">(</span>geneSets<span class="op">=</span><span class="va">.gs</span>, rankings<span class="op">=</span><span class="va">rnk</span>, verbose<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span></span></code></pre></div>
-<p>A heatmap can be used to check which signatures are highly expressed
-in which cell types. To diversify the visualization, here we summarize
-the top 2 signatures per cell type, and display their scaled average
-enrichment score in a waterfall plot.</p>
+<p>A heatmap can be used to examine which signatures are highly
+expressed in each cell type. To diversify the visualization, we instead
+summarize the top two signatures per cell type and display their scaled
+average enrichment scores in a waterfall plot.</p>
 <div class="sourceCode" id="cb36"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># aggregate AUC values by cellType</span></span>
 <span><span class="va">mu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/scuttle/man/aggregateAcrossCells.html" class="external-link">aggregateAcrossCells</a></span><span class="op">(</span><span class="va">auc</span>, ids<span class="op">=</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span>,</span>
@@ -815,7 +827,7 @@ enrichment score in a waterfall plot.</p>
 <span></span>
 <span><span class="fu">plotDivergentBar</span><span class="op">(</span><span class="va">top_mu</span><span class="op">)</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/sigbarplot-1.png" class="r-plt" alt="" width="672"></p>
-<p>p53 is a well-known pathway related to tumor cell growth (<span class="citation">Vogelstein et al. (<a href="#ref-vogelstein2000surfing">2000</a>)</span>), and its enrichment
+<p>p53 is a well-known pathway involved in tumor cell growth (<span class="citation">Vogelstein et al. (<a href="#ref-vogelstein2000surfing">2000</a>)</span>), and its enrichment
 score can be visualized spatially.</p>
 <div class="sourceCode" id="cb37"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co"># add results as cell metadata</span></span>
@@ -897,9 +909,10 @@ across cell types.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.text.x <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>angle <span class="op">=</span> <span class="fl">45</span>, hjust <span class="op">=</span> <span class="fl">1</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/guides.html" class="external-link">guides</a></span><span class="op">(</span>fill <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/shape-violin-1.png" class="r-plt" alt="" width="691.2">
-We observer more uniform distribution in <code>Compactness</code>, while
-more variability in <code>fibreLength</code> across cell types.</p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/shape-violin-1.png" class="r-plt" alt="" width="691.2"></p>
+<p>We observe more uniform distribution in <code>Compactness</code>,
+while more variability in <code>fibreLength</code> across cell
+types.</p>
 <p>We can also view these shape metrics, such as
 <code>fibreLength</code>, spatially:</p>
 <div class="sourceCode" id="cb42"><pre class="downlit sourceCode r">
@@ -918,19 +931,19 @@ above.</p>
 <h3 id="interrogating-the-spatial-arrangement-of-our-cells-">Interrogating the spatial arrangement of our cells.<a class="anchor" aria-label="anchor" href="#interrogating-the-spatial-arrangement-of-our-cells-"></a>
 </h3>
 <p>What makes spatial transcriptomics more powerful than scRNA-seq is
-its integration with spatial statistics. There are two types of measures
-for spatial association: global and local.</p>
+its integration with spatial statistics. Measures of spatial association
+are commonly classified as either global or local.</p>
 <div class="section level4">
 <h4 id="global-spatial-association">Global spatial association<a class="anchor" aria-label="anchor" href="#global-spatial-association"></a>
 </h4>
-<p>We next quantify spatial proximity between annotated cell types. The
+<p>Next, we quantify spatial proximity between annotated cell types. The
 <code><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise()</a></code> function from the <em><a href="https://bioconductor.org/packages/3.23/spicyR" class="external-link">spicyR</a></em>
-package computes the K-cross function across all pairs of classes,
-summarizing whether cell type A tends to appear within distance
-<code>r</code> of cell type B more often than expected under spatial
-randomness. Here we use a radius of 200 units (~50 microns) to capture
-immediate neighborhood effects at approximately one to two cell
-diameters.</p>
+package computes the K-cross function for all pairs of cell types,
+summarizing whether cells of type A tend to occur within a distance
+<code>r</code> of cells of type B more frequently than expected under
+spatial randomness. Here, we use a radius of 200 units (~50 microns) to
+capture immediate neighborhood effects, corresponding to roughly one to
+two cell diameters.</p>
 <div class="sourceCode" id="cb43"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">crossK</span> <span class="op">=</span> <span class="fu"><a href="https://sydneybiox.github.io/spicyR/reference/getPairwise.html" class="external-link">getPairwise</a></span><span class="op">(</span><span class="va">vhdsub</span>, </span>
 <span>                     r <span class="op">=</span> <span class="fl">200</span>, </span>
@@ -939,10 +952,11 @@ diameters.</p>
 <span>                     spatialCoords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pxl_col_in_fullres"</span>, </span>
 <span>                                       <span class="st">"pxl_row_in_fullres"</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p>We can visualize these relationships using
-<code><a href="https://sydneybiox.github.io/spicyR/reference/imageCrossPlot.html" class="external-link">imageCrossPlot()</a></code>. It visualizes enrichment and avoidance
-across all pairs, which is handy for scanning for strong interactions
-before diving deeper. To aid interpretation, follow the sign: values
-above zero indicate spatial attraction at radius <code>r</code> (more
+<code><a href="https://sydneybiox.github.io/spicyR/reference/imageCrossPlot.html" class="external-link">imageCrossPlot()</a></code>, which displays spatial enrichment and
+avoidance across all cell-type pairs. This overview is useful for
+scanning for strong interactions before exploring specific pairs in more
+detail. To aid interpretation, note the sign of the values: those above
+zero indicate spatial attraction at radius <code>r</code> (more
 co-occurrence than expected), while values below zero indicate spatial
 repulsion.</p>
 <div class="sourceCode" id="cb44"><pre class="downlit sourceCode r">
@@ -950,20 +964,20 @@ repulsion.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/labs.html" class="external-link">ggtitle</a></span><span class="op">(</span><span class="st">"Spatial association"</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>axis.line <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span>, axis.ticks <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_blank</a></span><span class="op">(</span><span class="op">)</span><span class="op">)</span></span></code></pre></div>
 <p><img src="seq-workflow-visium-hd-cell_files/figure-html/spicy-pairwise-plot-1.png" class="r-plt" alt="" width="480"></p>
-<p>We can re-visit the spatial composition of cell types, annotated by
-<code>RCTD</code> above, to build intuition for these statistics. This
-helps confirm that any strong pairwise signals are visible in the image
-and not driven by a handful of cells.</p>
+<p>We can revisit the spatial composition of cell types annotated by
+<code>RCTD</code> to build intuition for these statistics. This helps
+confirm that strong pairwise signals are visible in the tissue image and
+are not driven by a handful of cells.</p>
 </div>
 <div class="section level4">
 <h4 id="local-indicator-of-spatial-association---lisa">Local indicator of spatial association - LISA<a class="anchor" aria-label="anchor" href="#local-indicator-of-spatial-association---lisa"></a>
 </h4>
 <p>Visium HD cell-level data can be modeled as a point pattern process
-(<span class="citation">Emons et al. (<a href="#ref-emons2025harnessing">2025</a>)</span>). Different than the
-previous global average measure, local indicators of spatial association
-(LISA) accounts for the local contribution of each cell (<span class="citation">Anselin (<a href="#ref-anselin1995local">1995</a>)</span>). First, we construct the
-plotting data frame that contains LISA Ripley’s K value for only Tumor
-cells.</p>
+(<span class="citation">Emons et al. (<a href="#ref-emons2025harnessing">2025</a>)</span>). In contrast to the
+global average measures described above, local indicators of spatial
+association (LISA) quantify the local contribution of each cell (<span class="citation">Anselin (<a href="#ref-anselin1995local">1995</a>)</span>). First, we construct a
+plotting data frame containing the LISA Ripley’s K values for tumor
+cells only.</p>
 <div class="sourceCode" id="cb45"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">df</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatialFDA/man/dot-speToDf.html" class="external-link">.speToDf</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span></span>
 <span><span class="va">pp</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/spatialFDA/man/dot-dfToppp.html" class="external-link">.dfToppp</a></span><span class="op">(</span><span class="va">df</span>, marks<span class="op">=</span><span class="st">"cellType"</span><span class="op">)</span></span>
@@ -997,11 +1011,11 @@ cells.</p>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">5</span>     0     0 iso0005     0 2<span style="text-decoration: underline;">766</span>533.</span></span>
 <span><span class="co">#&gt; <span style="color: #BCBCBC;">6</span>     0     0 iso0006     0 4<span style="text-decoration: underline;">535</span>711.</span></span></code></pre></div>
 <p>Plot the LISA Ripley’s K value for each tumor cell, colored by its
-value at a radius of 700 μm. Curves above the gray line representing
-complete spatial randomness (CSR) indicate highly clustered tumor
-cells.</p>
+value at a radius of 700 pixels. Curves above the gray line that
+represents complete spatial randomness (CSR) indicate highly clustered
+tumor cells in the right spatial plot.</p>
 <div class="sourceCode" id="cb46"><pre class="downlit sourceCode r">
-<code class="sourceCode R"><span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">plt_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">r</span>, <span class="va">value</span>, group<span class="op">=</span><span class="va">curve</span>, col<span class="op">=</span><span class="va">sel</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">plt_df</span>, <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">r</span>, <span class="va">value</span>, group<span class="op">=</span><span class="va">curve</span>, col<span class="op">=</span><span class="va">sel</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_path.html" class="external-link">geom_line</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span>y<span class="op">=</span><span class="va">theo</span><span class="op">)</span>, linetype<span class="op">=</span><span class="fl">2</span>, col<span class="op">=</span><span class="st">"darkgray"</span><span class="op">)</span> <span class="op">+</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_abline.html" class="external-link">geom_vline</a></span><span class="op">(</span>xintercept<span class="op">=</span><span class="fl">700</span><span class="op">)</span> <span class="op">+</span></span>
@@ -1012,36 +1026,47 @@ cells.</p>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> </span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position<span class="op">=</span><span class="st">"none"</span>, </span>
 <span>        axis.title <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_text</a></span><span class="op">(</span>size<span class="op">=</span><span class="fl">14</span><span class="op">)</span>,</span>
-<span>        panel.grid.major <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"grey90"</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> </span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/lisa-plot-1.png" class="r-plt" alt="" width="432"></p>
+<span>        panel.grid.major <span class="op">=</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/element.html" class="external-link">element_line</a></span><span class="op">(</span>colour <span class="op">=</span> <span class="st">"grey90"</span>, linetype <span class="op">=</span> <span class="fl">2</span><span class="op">)</span><span class="op">)</span> </span>
+<span></span>
+<span><span class="va">q</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="va">sel</span> <span class="op"><a href="https://magrittr.tidyverse.org/reference/pipe.html" class="external-link">%&gt;%</a></span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/cbind.html" class="external-link">cbind</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/r/base/data.frame.html" class="external-link">data.frame</a></span><span class="op">(</span>x <span class="op">=</span> <span class="va">ppSub</span><span class="op">$</span><span class="va">x</span>, y <span class="op">=</span> <span class="va">ppSub</span><span class="op">$</span><span class="va">y</span><span class="op">)</span><span class="op">)</span>, </span>
+<span>            <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">x</span>, <span class="va">y</span>, col<span class="op">=</span><span class="va">sel</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/coord_fixed.html" class="external-link">coord_equal</a></span><span class="op">(</span>expand<span class="op">=</span><span class="cn">FALSE</span><span class="op">)</span> <span class="op">+</span></span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/geom_point.html" class="external-link">geom_point</a></span><span class="op">(</span>size<span class="op">=</span><span class="fl">1</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/scale_viridis.html" class="external-link">scale_color_viridis_c</a></span><span class="op">(</span>option <span class="op">=</span> <span class="st">"mako"</span><span class="op">)</span> <span class="op">+</span> </span>
+<span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggtheme.html" class="external-link">theme_classic</a></span><span class="op">(</span><span class="op">)</span> <span class="op">+</span> <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/theme.html" class="external-link">theme</a></span><span class="op">(</span>legend.position <span class="op">=</span> <span class="st">"none"</span><span class="op">)</span></span>
+<span></span>
+<span><span class="va">p</span> <span class="op">|</span> <span class="va">q</span></span></code></pre></div>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/lisa-plot-1.png" class="r-plt" alt="" width="787.2"></p>
 </div>
 <div class="section level4">
 <h4 id="localisation-in-context">Localisation in context<a class="anchor" aria-label="anchor" href="#localisation-in-context"></a>
 </h4>
-<p>While pairwise proximity statistics are a sensible first step, they
-can sometimes be misleading because they ignore the broader tissue
-context. For example, the K-cross function from <code>spicyR</code> will
-tell us whether two cell types are found close together more often than
-expected under a random distribution, but it does not ask conditional
-questions. Biologists, however, often want to know things like:</p>
-<p><em>“Do immune cells cluster more tightly with tumor than we would
-expect, even after accounting for the fact that immune cells already
-tend to occur together?”</em></p>
-<p>This is where <code>Kontextual</code> from the <em><a href="https://bioconductor.org/packages/3.23/Statial" class="external-link">Statial</a></em>
-package comes in. <code>Kontextual</code> extends beyond pairwise
-enrichment by creating a contextual null model. Instead of comparing two
-cell types against a fully random distribution, it compares them against
-what we would expect given the observed mixture of other neighboring
-cell types. In practice, this means that <code>Kontextual</code> is
-testing whether a particular association is stronger (or weaker) than
-would be expected given the local cellular environment.</p>
+<p>While pairwise proximity statistics provide a sensible first step,
+they can sometimes be misleading because they ignore the broader tissue
+context. For example, the K-cross function from <code>spicyR</code>
+indicates whether two cell types are found close together more often
+than expected under a random distribution, but it does not address
+conditional questions. Biologists, however, are often interested in
+questions such as:</p>
+<p><em>“Are there certain immune cells that cluster more tightly with
+tumor cells, after accounting for the fact that immune cells generally
+do not cluster with tumors?”</em></p>
+<p>This is where <code>Kontextual</code>, from the <em><a href="https://bioconductor.org/packages/3.23/Statial" class="external-link">Statial</a></em>
+package, becomes useful. <code>Kontextual</code> goes beyond pairwise
+enrichment by constructing a contextual null model. Rather than
+comparing two cell types against a fully random distribution, it
+compares the observed association to what would be expected given the
+local mixture of neighboring cell types. In practice, this means that
+<code>Kontextual</code> tests whether a particular association is
+stronger or weaker than expected given the surrounding cellular
+environment.</p>
 <p>For this demonstration, we define an immune context composed of T
-cells, Myeloid cells, and B cells. <code>Kontextual</code> then
+cells, myeloid cells, and B cells. <code>Kontextual</code> then
 evaluates whether, within this immune backdrop, specific pairs (for
-example, Myeloid–Tumor) show evidence of additional attraction or
-repulsion at a chosen spatial scale. The method is flexible: you can
-define any grouping of interest as a “parent” or context, and then
-interrogate the conditional relationships of one population relative to
+example, myeloid–tumor) show evidence of additional attraction or
+repulsion at a chosen spatial scale. The method is flexible: any
+grouping of interest can be defined as a “parent” or context, allowing
+conditional relationships of a population to be interrogated relative to
 that context.</p>
 <div class="sourceCode" id="cb47"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="co">## Create a vector saying which cells are in the immune context</span></span>
@@ -1061,7 +1086,7 @@ that context.</p>
 <span>  spatialCoords <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"pxl_col_in_fullres"</span>, <span class="st">"pxl_row_in_fullres"</span><span class="op">)</span>,</span>
 <span>  r <span class="op">=</span> <span class="fl">200</span></span>
 <span><span class="op">)</span></span></code></pre></div>
-<p>Let us visualize the results.</p>
+<p>Let’s visualize the results.</p>
 <div class="sourceCode" id="cb48"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">plotKontext</span> <span class="op">&lt;-</span> <span class="va">resultsKontextual</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://ggplot2.tidyverse.org/reference/ggplot.html" class="external-link">ggplot</a></span><span class="op">(</span><span class="fu"><a href="https://ggplot2.tidyverse.org/reference/aes.html" class="external-link">aes</a></span><span class="op">(</span><span class="va">original</span>, <span class="va">kontextual</span>, label <span class="op">=</span> <span class="va">test</span><span class="op">)</span><span class="op">)</span> <span class="op">+</span></span>
@@ -1072,10 +1097,10 @@ that context.</p>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/plotly/man/ggplotly.html" class="external-link">ggplotly</a></span><span class="op">(</span><span class="va">plotKontext</span><span class="op">)</span></span></code></pre></div>
 <div class="plotly html-widget html-fill-item" id="htmlwidget-ac96cb3ee4656e2e9ec3" style="width:768px;height:480px;"></div>
-<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"729a5e1b3b":{"x":{},"y":{},"label":{},"type":"scatter"},"72978fd79a4":{"yintercept":{}},"72938e6eb1c":{"xintercept":{}}},"cur_data":"729a5e1b3b","visdat":{"729a5e1b3b":["function (y) ","x"],"72978fd79a4":["function (y) ","x"],"72938e6eb1c":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radii-dependent curves (for example Myeloid
-around Tumor) to confirm at which scales the effect appears, which is
-often informative for processes like invasion fronts or peritumoral
-niches.</p>
+<script type="application/json" data-for="htmlwidget-ac96cb3ee4656e2e9ec3">{"x":{"data":[{"x":[38.497401579169178,52.947804752590713,16.81698220005876,38.10413294732507,-84.376564590267492,32.531757501300689,-45.521836588325414,93.52316644980516,102.48037734019641,36.472322137519768,42.445326468059534,-38.827053093342897,39.323133946858547,-38.365823024562644,-4.156179383647725,10.320933098429805,32.779268529754773,61.016573460516497,102.51508158458608,-81.945208110139802,38.447649136650398,-87.514513392068451,40.588282753877024,45.939808893693709],"y":[-37.747657073860324,7.5789956160251393,-25.545877740736444,-34.924642375066185,-44.646940100470601,19.385225696785085,-57.064078854362521,20.865072280228731,11.194610256105193,2.4674272540062248,7.9251226023390586,26.147889990898705,-41.897754471719395,-43.524046748279517,-9.0677930884972682,-13.12777465114948,-3.4642733407985702,25.551323912589027,16.157430524300793,-35.504027481258163,-42.049226856530993,-93.723010090742363,32.971220405894115,-21.064731447176115],"text":["original:  38.497402<br />kontextual: -37.747657<br />test: T_cells__B_cells__immune","original:  52.947805<br />kontextual:   7.578996<br />test: Endothelial__B_cells__immune","original:  16.816982<br />kontextual: -25.545878<br />test: Fibroblast__B_cells__immune","original:  38.104133<br />kontextual: -34.924642<br />test: Myeloid__B_cells__immune","original: -84.376565<br />kontextual: -44.646940<br />test: Tumor__B_cells__immune","original:  32.531758<br />kontextual:  19.385226<br />test: Intestinal_Epithelial__B_cells__immune","original: -45.521837<br />kontextual: -57.064079<br />test: Smooth_Muscle__B_cells__immune","original:  93.523166<br />kontextual:  20.865072<br />test: Neuronal__B_cells__immune","original: 102.480377<br />kontextual:  11.194610<br />test: T_cells__Myeloid__immune","original:  36.472322<br />kontextual:   2.467427<br />test: Endothelial__Myeloid__immune","original:  42.445326<br />kontextual:   7.925123<br />test: Fibroblast__Myeloid__immune","original: -38.827053<br />kontextual:  26.147890<br />test: Tumor__Myeloid__immune","original:  39.323134<br />kontextual: -41.897754<br />test: B_cells__Myeloid__immune","original: -38.365823<br />kontextual: -43.524047<br />test: Intestinal_Epithelial__Myeloid__immune","original:  -4.156179<br />kontextual:  -9.067793<br />test: Smooth_Muscle__Myeloid__immune","original:  10.320933<br />kontextual: -13.127775<br />test: Neuronal__Myeloid__immune","original:  32.779269<br />kontextual:  -3.464273<br />test: Endothelial__T_cells__immune","original:  61.016573<br />kontextual:  25.551324<br />test: Fibroblast__T_cells__immune","original: 102.515082<br />kontextual:  16.157431<br />test: Myeloid__T_cells__immune","original: -81.945208<br />kontextual: -35.504027<br />test: Tumor__T_cells__immune","original:  38.447649<br />kontextual: -42.049227<br />test: B_cells__T_cells__immune","original: -87.514513<br />kontextual: -93.723010<br />test: Intestinal_Epithelial__T_cells__immune","original:  40.588283<br />kontextual:  32.971220<br />test: Smooth_Muscle__T_cells__immune","original:  45.939809<br />kontextual: -21.064731<br />test: Neuronal__T_cells__immune"],"type":"scatter","mode":"markers","marker":{"autocolorscale":false,"color":"rgba(0,0,0,1)","opacity":1,"size":5.6692913385826778,"symbol":"circle","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)"}},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[-97.015993140901173,112.01656133341881],"y":[0,0],"text":"yintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null},{"x":[0,0],"y":[-100.0577216155742,39.30593193072594],"text":"xintercept: 0","type":"scatter","mode":"lines","line":{"width":1.8897637795275593,"color":"rgba(0,0,0,1)","dash":"solid"},"hoveron":"points","showlegend":false,"xaxis":"x","yaxis":"y","hoverinfo":"text","frame":null}],"layout":{"margin":{"t":23.305936073059364,"r":7.3059360730593621,"b":37.260273972602747,"l":48.949771689497737},"plot_bgcolor":"rgba(255,255,255,1)","paper_bgcolor":"rgba(255,255,255,1)","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724},"xaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-97.015993140901173,112.01656133341881],"tickmode":"array","ticktext":["-50","0","50","100"],"tickvals":[-50,0,50,100],"categoryorder":"array","categoryarray":["-50","0","50","100"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"y","title":{"text":"original","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"yaxis":{"domain":[0,1],"automargin":true,"type":"linear","autorange":false,"range":[-100.0577216155742,39.30593193072594],"tickmode":"array","ticktext":["-100","-50","0"],"tickvals":[-100,-49.999999999999993,0],"categoryorder":"array","categoryarray":["-100","-50","0"],"nticks":null,"ticks":"outside","tickcolor":"rgba(0,0,0,1)","ticklen":3.6529680365296811,"tickwidth":0,"showticklabels":true,"tickfont":{"color":"rgba(0,0,0,1)","family":"","size":11.689497716894984},"tickangle":-0,"showline":true,"linecolor":"rgba(0,0,0,1)","linewidth":0,"showgrid":false,"gridcolor":null,"gridwidth":0,"zeroline":false,"anchor":"x","title":{"text":"kontextual","font":{"color":"rgba(0,0,0,1)","family":"","size":14.611872146118724}},"hoverformat":".2f"},"shapes":[{"type":"rect","fillcolor":null,"line":{"color":null,"width":0,"linetype":[]},"yref":"paper","xref":"paper","layer":"below","x0":0,"x1":1,"y0":0,"y1":1}],"showlegend":false,"legend":{"bgcolor":"rgba(255,255,255,1)","bordercolor":"transparent","borderwidth":0,"font":{"color":"rgba(0,0,0,1)","family":"","size":11.68949771689498}},"hovermode":"closest","barmode":"relative"},"config":{"doubleClick":"reset","modeBarButtonsToAdd":["hoverclosest","hovercompare"],"showSendToCloud":false},"source":"A","attrs":{"fc14ff6d8ff":{"x":{},"y":{},"label":{},"type":"scatter"},"fc118d831b7":{"yintercept":{}},"fc1595bd3a4":{"xintercept":{}}},"cur_data":"fc14ff6d8ff","visdat":{"fc14ff6d8ff":["function (y) ","x"],"fc118d831b7":["function (y) ","x"],"fc1595bd3a4":["function (y) ","x"]},"highlight":{"on":"plotly_click","persistent":false,"dynamic":false,"selectize":false,"opacityDim":0.20000000000000001,"selected":{"opacity":1},"debounce":0},"shinyEvents":["plotly_hover","plotly_click","plotly_selected","plotly_relayout","plotly_brushed","plotly_brushing","plotly_clickannotation","plotly_doubleclick","plotly_deselect","plotly_afterplot","plotly_sunburstclick"],"base_url":"https://plot.ly"},"evals":[],"jsHooks":[]}</script><p>We can then inspect radius-dependent curves (for example, Myeloid
+cells around Tumor cells) to determine the spatial scales at which the
+effect emerges, which is often informative for processes such as
+invasion fronts or peritumoral niches.</p>
 <div class="sourceCode" id="cb49"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">curves</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/kontextCurve.html" class="external-link">kontextCurve</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>, rs <span class="op">=</span> <span class="fu"><a href="https://rdrr.io/r/base/seq.html" class="external-link">seq</a></span><span class="op">(</span><span class="fl">20</span>, <span class="fl">500</span>, <span class="fl">50</span><span class="op">)</span>, </span>
@@ -1094,15 +1119,16 @@ niches.</p>
 <span><span class="va">p</span><span class="op">@</span><span class="va">layers</span><span class="op">$</span><span class="va">geom_hline</span><span class="op">$</span><span class="va">aes_params</span><span class="op">$</span><span class="va">colour</span> <span class="op">&lt;-</span> <span class="st">"black"</span> <span class="co"># update dashed line color</span></span>
 <span><span class="va">p</span><span class="op">$</span><span class="va">layers</span><span class="op">[[</span><span class="st">"geom_ribbon"</span><span class="op">]</span><span class="op">]</span><span class="op">$</span><span class="va">show.legend</span> <span class="op">&lt;-</span> <span class="cn">FALSE</span>   <span class="co"># remove geom ribbon box</span></span>
 <span><span class="va">p</span></span></code></pre></div>
-<p><img src="seq-workflow-visium-hd-cell_files/figure-html/ktx-scale-curve-1.png" class="r-plt" alt="" width="432">
-Because immune cells are already densely packed, Kontextual identifies
-myeloid cells as being particularly close to tumor cells beyond a
-50-pixel radius. In contrast, when immune context is not considered, the
-L-function suggests that myeloid cells and tumor cells are not spatially
-close.</p>
+<p><img src="seq-workflow-visium-hd-cell_files/figure-html/ktx-scale-curve-1.png" class="r-plt" alt="" width="432"></p>
+<p>At a global level, the negative L-function values suggest that
+Myeloid and Tumor cells are spatially segregated. However, the positive
+<code>Kontextual</code> values indicate that Myeloid cells cluster more
+strongly with Tumor cells than would be expected given their immune
+context (i.e., relative to other immune cells).</p>
 <p>To aid interpretation, we can also re-plot the spatial map with the
-immune context grayed and the two focal types colored. This quickly
-links our statistical findings to a tangible patterns in the tissue.</p>
+immune context shown in gray and the two focal cell types highlighted in
+color. This helps link the statistical findings to tangible spatial
+patterns within the tissue.</p>
 <div class="sourceCode" id="cb50"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">ct_interest</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/c.html" class="external-link">c</a></span><span class="op">(</span><span class="st">"Myeloid"</span>, <span class="st">"Tumor"</span><span class="op">)</span></span>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">myetu</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/r/base/ifelse.html" class="external-link">ifelse</a></span><span class="op">(</span><span class="op">!</span><span class="op">(</span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType</span> <span class="op"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">%in%</a></span> <span class="va">ct_interest</span><span class="op">)</span>, </span>
@@ -1212,10 +1238,12 @@ patterns when they are located close to Tumor cells.</p>
 <span><span class="co">#&gt; 19 7.720243e-07 3.450949e-04</span></span>
 <span><span class="co">#&gt; 20 8.670557e-07 3.681952e-04</span></span></code></pre></div>
 <p>The previous output is a ranked list of genes, highlighting markers
-that change as Myeloid cells are near tumor cells. One of the top genes
+that change as Myeloid cells are near Tumor cells. One of the top genes
 on this list is <em>SPP1</em> which is known to be expressed in
-tumor-associated macrophages. We can visualize this relationship using
-the <code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges()</a></code> function.</p>
+tumor-associated macrophages. A positive coefficient of <em>SPP1</em>
+suggests higher expression of <em>SPP1</em> in Myeloid cells when they
+are in areas of high tumour density. We can visualize this relationship
+using the <code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges()</a></code> function.</p>
 <div class="sourceCode" id="cb53"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">p</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://sydneybiox.github.io/Statial/reference/plotStateChanges.html" class="external-link">plotStateChanges</a></span><span class="op">(</span></span>
 <span>  cells <span class="op">=</span> <span class="va">vhdsub</span>,</span>
@@ -1240,8 +1268,9 @@ the <code><a href="https://sydneybiox.github.io/Statial/reference/plotStateChang
 <div class="section level4">
 <h4 id="contamination">Contamination<a class="anchor" aria-label="anchor" href="#contamination"></a>
 </h4>
-<p>However, there are some genes that not expressed in Macrophages such
-as <em>CEACAM6</em> which are likely lateral spillover or diffusion.</p>
+<p>However, some genes should not be expressed in macrophages, such as
+<em>CEACAM6</em>, and are therefore likely the result of lateral
+spillover or transcript diffusion.</p>
 <div class="sourceCode" id="cb54"><pre class="downlit sourceCode r">
 <code class="sourceCode R"><span><span class="va">sce</span><span class="op">[</span>, <span class="va">down_sample</span><span class="op">]</span> <span class="op">|&gt;</span></span>
 <span>  <span class="fu"><a href="https://rdrr.io/pkg/ttservice/man/join_features.html" class="external-link">join_features</a></span><span class="op">(</span>features <span class="op">=</span> <span class="st">"CEACAM6"</span>, shape <span class="op">=</span> <span class="st">"wide"</span><span class="op">)</span> <span class="op">|&gt;</span></span>
@@ -1272,7 +1301,7 @@ relationships.</p>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html" class="external-link">reducedDim</a></span><span class="op">(</span><span class="va">vhdsub</span>, <span class="st">"RCTD"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="va">contam</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/match.html" class="external-link">match</a></span><span class="op">(</span><span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">vhdsub</span><span class="op">)</span>, <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">rownames</a></span><span class="op">(</span><span class="va">contam</span><span class="op">)</span><span class="op">)</span>,<span class="op">]</span></span></code></pre></div>
 <p>After correction, the false discovery rate of <em>CEACAM6</em> is no
 longer significant at a threshold of 0.05. The rank of this gene falls
-from 14 to 173, while other Macrophage-relevant top genes, such as
+from 14 to 173, while other macrophage-relevant top genes, such as
 <em>SPP1</em>, keep their high rankings and remain
 contamination-invariant.</p>
 <div class="sourceCode" id="cb56"><pre class="downlit sourceCode r">
@@ -1302,7 +1331,7 @@ get near Tumor cells.</p>
 in this Visium HD public dataset, spanning different disease conditions
 (healthy vs. cancer). To apply spatial statistics to assess cell-type
 colocalization across multiple conditions, you can refer to the
-Multi-sample chapters of the OSTA book: a. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-diff-spatial-patterns.html" class="external-link">Differential
+<em>Multi-sample</em> chapters of the OSTA book: a. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-diff-spatial-patterns.html" class="external-link">Differential
 spatial patterns</a>, b. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-diff-colocalization.html" class="external-link">Differential
 colocalization</a>, c. <a href="https://bioconductor.org/books/release/OSTA/pages/mult-structure-based.html" class="external-link">Structure-based
 analysis</a></p>
@@ -1344,44 +1373,70 @@ analysis</a></p>
 <span><span class="va">vhdsub</span><span class="op">$</span><span class="va">cellType2</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/row_colnames.html" class="external-link">colnames</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span><span class="op">[</span><span class="fu"><a href="https://rdrr.io/r/base/maxCol.html" class="external-link">max.col</a></span><span class="op">(</span><span class="va">P</span>, ties.method <span class="op">=</span> <span class="st">"first"</span><span class="op">)</span><span class="op">]</span></span>
 <span></span>
 <span><span class="fu"><a href="https://rdrr.io/pkg/SingleCellExperiment/man/reducedDims.html" class="external-link">reducedDim</a></span><span class="op">(</span><span class="va">vhdsub</span>, <span class="st">"CARD"</span><span class="op">)</span> <span class="op">&lt;-</span> <span class="fu"><a href="https://rdrr.io/pkg/BiocGenerics/man/as.data.frame.html" class="external-link">as.data.frame</a></span><span class="op">(</span><span class="va">P</span><span class="op">)</span></span></code></pre></div>
-<div id="refs" class="references csl-bib-body hanging-indent">
+<div id="refs" class="references csl-bib-body hanging-indent" entry-spacing="0" line-spacing="2">
 <div id="ref-aibar2017scenic" class="csl-entry">
-<span class="nocase">Aibar, Sara, Carmen Bravo González-Blas, Thomas
-Moerman, et al.</span> 2017. <span>“SCENIC: Single-Cell Regulatory
-Network Inference and Clustering.”</span> <em>Nature Methods</em> 14
-(11): 1083–86.
+<span class="nocase">Aibar, S., González-Blas, C. B., Moerman, T.,
+Huynh-Thu, V. A., Imrichova, H., Hulselmans, G., Rambow, F., Marine,
+J.-C., Geurts, P., Aerts, J., et al.</span> (2017). SCENIC: Single-cell
+regulatory network inference and clustering. <em>Nature Methods</em>,
+<em>14</em>(11), 1083–1086.
 </div>
 <div id="ref-anselin1995local" class="csl-entry">
-Anselin, Luc. 1995. <span>“Local Indicators of Spatial
-Association—LISA.”</span> <em>Geographical Analysis</em> 27 (2): 93–115.
+Anselin, L. (1995). Local indicators of spatial association—LISA.
+<em>Geographical Analysis</em>, <em>27</em>(2), 93–115.
+</div>
+<div id="ref-cable2022robust" class="csl-entry">
+Cable, D. M., Murray, E., Zou, L. S., Goeva, A., Macosko, E. Z., Chen,
+F., &amp; Irizarry, R. A. (2022). Robust decomposition of cell type
+mixtures in spatial transcriptomics. <em>Nature Biotechnology</em>,
+<em>40</em>(4), 517–526.
 </div>
 <div id="ref-emons2025harnessing" class="csl-entry">
-Emons, Martin, Samuel Gunz, Helena L Crowell, et al. 2025.
-<span>“Harnessing the Potential of Spatial Statistics for Spatial Omics
-Data with Pasta.”</span> <em>Nucleic Acids Research</em> 53 (17):
-gkaf870.
+Emons, M., Gunz, S., Crowell, H. L., Mallona, I., Kuehl, M., Furrer, R.,
+&amp; Robinson, M. D. (2025). Harnessing the potential of spatial
+statistics for spatial omics data with pasta. <em>Nucleic Acids
+Research</em>, <em>53</em>(17), gkaf870.
+</div>
+<div id="ref-gaspard2025cell" class="csl-entry">
+Gaspard-Boulinc, L. C., Gortana, L., Walter, T., Barillot, E., &amp;
+Cavalli, F. M. (2025). Cell-type deconvolution methods for spatial
+transcriptomics. <em>Nature Reviews Genetics</em>, 1–19.
 </div>
 <div id="ref-gunz2025analysis" class="csl-entry">
-Gunz, Samuel, Helena L Crowell, and Mark D Robinson. 2025.
-<span>“Analysis of Anatomical Multi-Cellular Structures from Spatial
-Omics Data Using Sosta.”</span> <em>bioRxiv</em>, 2025–10.
+Gunz, S., Crowell, H. L., &amp; Robinson, M. D. (2025). Analysis of
+anatomical multi-cellular structures from spatial omics data using
+sosta. <em>bioRxiv</em>, 2025–2010.
+</div>
+<div id="ref-li2023comprehensive" class="csl-entry">
+Li, H., Zhou, J., Li, Z., Chen, S., Liao, X., Zhang, B., Zhang, R.,
+Wang, Y., Sun, S., &amp; Gao, X. (2023). A comprehensive benchmarking
+with practical guidelines for cellular deconvolution of spatial
+transcriptomics. <em>Nature Communications</em>, <em>14</em>(1), 1548.
 </div>
 <div id="ref-oliveira2025high" class="csl-entry">
-<span class="nocase">Oliveira, Michelli Faria de, Juan Pablo Romero,
-Meii Chung, et al.</span> 2025. <span>“High-Definition Spatial
-Transcriptomic Profiling of Immune Cell Populations in Colorectal
-Cancer.”</span> <em>Nature Genetics</em>, 1–12.
+<span class="nocase">Oliveira, M. F. de, Romero, J. P., Chung, M.,
+Williams, S. R., Gottscho, A. D., Gupta, A., Pilipauskas, S. E.,
+Mohabbat, S., Raman, N., Sukovich, D. J., et al.</span> (2025).
+High-definition spatial transcriptomic profiling of immune cell
+populations in colorectal cancer. <em>Nature Genetics</em>, 1–12.
+</div>
+<div id="ref-sang2024spotless" class="csl-entry">
+Sang-Aram, C., Browaeys, R., Seurinck, R., &amp; Saeys, Y. (2024).
+Spotless, a reproducible pipeline for benchmarking cell type
+deconvolution in spatial transcriptomics. <em>Elife</em>, <em>12</em>,
+RP88431.
 </div>
 <div id="ref-subramanian2005gene" class="csl-entry">
-<span class="nocase">Subramanian, Aravind, Pablo Tamayo, Vamsi K Mootha,
-et al.</span> 2005. <span>“Gene Set Enrichment Analysis: A
-Knowledge-Based Approach for Interpreting Genome-Wide Expression
-Profiles.”</span> <em>Proceedings of the National Academy of
-Sciences</em> 102 (43): 15545–50.
+<span class="nocase">Subramanian, A., Tamayo, P., Mootha, V. K.,
+Mukherjee, S., Ebert, B. L., Gillette, M. A., Paulovich, A., Pomeroy, S.
+L., Golub, T. R., Lander, E. S., et al.</span> (2005). Gene set
+enrichment analysis: A knowledge-based approach for interpreting
+genome-wide expression profiles. <em>Proceedings of the National Academy
+of Sciences</em>, <em>102</em>(43), 15545–15550.
 </div>
 <div id="ref-vogelstein2000surfing" class="csl-entry">
-Vogelstein, Bert, David Lane, and Arnold J Levine. 2000. <span>“Surfing
-the P53 Network.”</span> <em>Nature</em> 408 (6810): 307–10.
+Vogelstein, B., Lane, D., &amp; Levine, A. J. (2000). Surfing the p53
+network. <em>Nature</em>, <em>408</em>(6810), 307–310.
 </div>
 </div>
 </div>
