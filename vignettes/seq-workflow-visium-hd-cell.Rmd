@@ -2,7 +2,6 @@
 title: "EuroBioC2025 OSTA Workshop"
 output: rmarkdown::html_vignette
 bibliography: references.bib
-csl: https://www.zotero.org/styles/apa
 link-citations: true
 vignette: >
   %\VignetteIndexEntry{EuroBioC2025 OSTA Workshop}
@@ -46,9 +45,7 @@ list.files(file.path(td, "segmented_outputs"))
 
 We prepared a reader for Visium HD segmented output at `./vignettes/utils.R`. 
 
-::: {.callout-note}
 **Update (January 2026):** Pull requests branched from this reader have been merged into the `VisiumIO` and `SpatialFeatureExperiment` packages.
-:::
 
 ### *R* / *Bioconductor* packages used
 
@@ -636,7 +633,7 @@ gc()
 
 ## Shape statistics
 
-Because cell segmentation polygons are available for each cell, we can derive a range of shape metrics (@gunz2025analysis).
+Because cell segmentation polygons are available for each cell, we can derive a wide range of shape metrics (@gunz2025analysis). `r BiocStyle::Biocpkg("sosta")` was originally developed to analyze multi-cellular anatomical structures using polygons that outline regions of cells; here, we extend its use to investigate the geometry of individual cells.
 
 ```{r shape-metrics}
 # get cell segmentations
